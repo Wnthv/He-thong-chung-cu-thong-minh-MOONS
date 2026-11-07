@@ -1,4 +1,4 @@
-=== CSDL kiểm thử: moons_test · ngày 2026-11-05 ===
+=== CSDL kiểm thử: moons_test · ngày 2026-11-04 ===
 DB-01  ĐẠT tong_tien luôn bằng tổng thành tiền chi tiết
        → tong_tien sau UPDATE = 2.902.150 đ (ban đầu 2.902.150 đ)
 DB-02  ĐẠT Không sửa chi tiết của hóa đơn đã phát hành
@@ -58,7 +58,7 @@ SV-09  ĐẠT Hủy hóa đơn: lý do tối thiểu 20 ký tự
 SV-10  ĐẠT Hủy hóa đơn mở khóa chỉ số, lập lại HĐ thay thế (-R1)
        → HD-202610-A0208:da_huy, HD-202610-A0208-R1:cho_duyet
 SV-11  ĐẠT Báo cáo công nợ loại trừ HĐ Đã hủy/Chờ duyệt
-       → KPI=2.236.469.226 đ; Σ chưa TT=2.236.469.226 đ; HĐ hủy=1.551.420 đ
+       → KPI=2.289.966.456 đ; Σ chưa TT=2.289.966.456 đ; HĐ hủy=1.551.420 đ
 SV-12  ĐẠT Tạo URL thanh toán có chữ ký HMAC SHA512
        → hash=128 ký tự; amount=145716000; GD=khoi_tao
 SV-13  ĐẠT IPN sai chữ ký bị từ chối, đưa vào ngoại lệ
@@ -82,11 +82,11 @@ SV-21  ĐẠT IPN đến sau khi đã thu tiền mặt → ngoại lệ đối s
 SV-22  ĐẠT Khách thuê chỉ thấy hóa đơn trong thời hạn hợp đồng
        → Kỳ thấy được: 2026-06→2026-10; thanh toán HĐ cũ: Không tìm thấy hóa đơn hoặc hóa đơn ngoài thời hạn hợp đồng thuê.
 SV-23  ĐẠT Đặt tiện ích hợp lệ sinh vé QR
-       → Mã vé MOONS-BBQ-A0201-20261108-10-538E
+       → Mã vé MOONS-BBQ-A0201-20261107-12-D9F8
 SV-24  ĐẠT Chống trùng khung giờ (tiện ích độc quyền)
        → LỖI: Khung giờ này vừa được đăng ký bởi cư dân khác, vui lòng chọn khung giờ khác.
 SV-25  ĐẠT Đặt đồng thời cùng khung giờ: chỉ 1 giao dịch thành công
-       → P1: ERR Khung giờ này vừa được đăng ký bởi cư dâ | P2: OK MOONS-BBQ-A0202-20261108-14-83D8 | Số lượt trong CSDL: 1
+       → P1: ERR Khung giờ này vừa được đăng ký bởi cư dâ | P2: OK MOONS-BBQ-A0202-20261107-14-FAE6 | Số lượt trong CSDL: 1
 SV-26  ĐẠT Hạn mức 2 lượt BBQ/căn hộ/tuần
        → LỖI: Căn hộ đã dùng hết hạn mức 2 lượt Khu BBQ ngoài trời trong tuần này.
 SV-27  ĐẠT Vượt sức chứa bị từ chối
@@ -96,13 +96,13 @@ SV-28  ĐẠT Không đặt ngày trong quá khứ
 SV-29  ĐẠT Nợ quá hạn > 30 ngày bị khóa đặt tiện ích độc quyền
        → LỖI: Căn hộ có hóa đơn quá hạn trên 30 ngày. Vui lòng thanh toán để mở lại quyền đặt tiện ích.
 SV-30  ĐẠT Căn nợ quá hạn vẫn được dùng tiện ích dùng chung (hồ bơi)
-       → Mã vé MOONS-POOL-A0106-20261108-08-158A
+       → Mã vé MOONS-POOL-A0106-20261107-08-78F0
 SV-31  ĐẠT Hủy muộn (< 2 giờ) vẫn tính vào hạn mức tuần
        → huy_muon – Đã hủy. Do hủy trong vòng 2 giờ trước giờ sử dụng, lượt này vẫn được tính vào hạn mức tuần.
 SV-32  ĐẠT Khóa lịch bảo trì tự hủy lịch trùng và chặn đặt mới
-       → Đã hủy 5 lịch; đặt mới: Khung giờ này đang khóa để bảo trì.
+       → Đã hủy 7 lịch; đặt mới: Khung giờ này đang khóa để bảo trì.
 SV-33  ĐẠT Xác thực vé QR: vé không phải hôm nay bị từ chối
-       → LỖI: Vé dùng cho ngày 08/11/2026, không phải hôm nay.
+       → LỖI: Vé dùng cho ngày 07/11/2026, không phải hôm nay.
 SV-34  ĐẠT Định mức xe tính cả hồ sơ chờ duyệt (tối đa 4 xe máy)
        → xe 1: OK; xe 2: OK; xe 3: Căn hộ đã đạt định mức tối đa 4 Xe máy.
 SV-35  ĐẠT Biển số sai định dạng bị từ chối
@@ -134,7 +134,7 @@ SV-47  ĐẠT Câu hỏi hóa đơn riêng trả lời từ CSDL, không gửi m
 SV-48  ĐẠT Không có ngữ cảnh liên quan thì không bịa câu trả lời
        → Tôi chưa tìm thấy quy định liên quan trong tài liệu của Ban Quản lý. Bạn vui lòng liên hệ Lễ tân để được hỗ trợ.
 PQ-01  ĐẠT Chưa đăng nhập bị chuyển về trang đăng nhập
-       → HTTP 302 → /index.php?r=auth%2Flogin
+       → HTTP 302 → http://127.0.0.1:8080/auth/login
 PQ-02  ĐẠT Cư dân không truy cập phân hệ quản trị
        → HTTP 403
 PQ-03  ĐẠT Lễ tân không truy cập chỉ số & hóa đơn

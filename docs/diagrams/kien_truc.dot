@@ -1,11 +1,17 @@
-digraph G { rankdir=LR; fontname="DejaVu Sans"; node[fontname="DejaVu Sans",fontsize=11,shape=box,style="rounded,filled",fillcolor="#F2F6F3",color="#5F7B6F"]; edge[fontname="DejaVu Sans",fontsize=9,color="#555555"];
+digraph G { rankdir=TB; newrank=true; nodesep=0.35; ranksep=0.45; fontname="DejaVu Sans"; node[fontname="DejaVu Sans",fontsize=11,shape=box,style="rounded,filled",fillcolor="#F2F6F3",color="#5F7B6F"]; edge[fontname="DejaVu Sans",fontsize=9,color="#555555"];
 subgraph cluster_c {label="Client (trình duyệt)";style="rounded,dashed";color="#999999";fontname="DejaVu Sans";
  m[label="Mobile Web – Cư dân\n(Chủ hộ, Khách thuê)"]; d[label="Desktop Web – Ban Quản lý\n(Lễ tân, Kế toán, KTT, ĐPV, KTV, Admin)"];}
-subgraph cluster_s {label="Máy chủ Web – PHP 8 (Apache/WAMP)";style="rounded";color="#5F7B6F";fontname="DejaVu Sans";
- fc[label="Front Controller\npublic/index.php\n(Router + RBAC + CSRF)",fillcolor="#E7EEEA"];
- c[label="Controllers\nAuth, Resident, Payment, Admin"]; s[label="Services (nghiệp vụ)\nBilling, Payment, Booking, Vehicle,\nResident, Ticket, AI, Report, Audit"];
- v[label="Views (PHP template)\nlayouts/resident, layouts/admin"]; fc->c; c->s; c->v; }
-db[label="MySQL 8 / MariaDB\n15 bảng InnoDB\nCHECK · UNIQUE · FK · 16 TRIGGER",shape=cylinder,fillcolor="#FFF7E6",color="#B7791F"];
+subgraph cluster_s {label="Máy chủ Web – Laravel 13 / PHP 8.3 (WAMP: php artisan serve hoặc Apache)";style="rounded";color="#5F7B6F";fontname="DejaVu Sans";
+ r[label="Routing + Middleware – routes/web.php\n(RoleMiddleware RBAC, CSRF)",fillcolor="#E7EEEA"];
+ c[label="Controller\nAuth, Resident, Payment, Admin"];
+ v[label="View (Blade)\nlayouts/resident, layouts/admin\n23 màn hình"];
+ s[label="Service (nghiệp vụ)\nBilling, Payment, Booking, Vehicle, Card,\nResident, Ticket, AI, Report, Account, Audit"];
+ md[label="Model (Eloquent)\n15 Model ↔ 15 bảng\n26 quan hệ belongsTo / hasMany"];
+ r->c; c->v; c->s; c->md; s->md;
+ {rank=same; v; s;} }
+db[label="MySQL 8 / MariaDB (WAMP)\n15 bảng InnoDB · CHECK · UNIQUE · FK · 16 TRIGGER\n(tạo bằng Migration)",shape=cylinder,fillcolor="#FFF7E6",color="#B7791F"];
 vn[label="Cổng VNPay\n(HMAC SHA512, IPN)",fillcolor="#E6F0FA",color="#005BAA"]; gm[label="Google Gemini API\n(tùy chọn)",fillcolor="#E6F0FA",color="#005BAA"];
-m->fc[label="HTTPS"]; d->fc[label="HTTPS"]; s->db[label="PDO\nprepared statement"]; s->vn[label="URL thanh toán"]; vn->fc[label="IPN / ReturnUrl"]; s->gm[label="ngữ cảnh RAG"];
+m->r[label="HTTPS"]; d->r[label="HTTPS"]; md->db[label="Eloquent ORM / PDO\nprepared statement"]; s->db[label="giao dịch, khóa dòng\nFOR UPDATE",style=dashed];
+s->vn[label="URL thanh toán"]; vn->r[label="IPN / ReturnUrl",constraint=false]; s->gm[label="ngữ cảnh RAG"];
+{rank=same; md; vn; gm;}
 }

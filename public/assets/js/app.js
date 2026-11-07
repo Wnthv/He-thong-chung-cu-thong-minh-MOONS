@@ -136,7 +136,7 @@
   /* ---- Gạch nợ thủ công: tải hóa đơn chưa thanh toán theo mã căn hộ ---- */
   const aptInp = $('#manualApt');
   if (aptInp) aptInp.addEventListener('change', () => {
-    fetch(APP.unpaid + '&apt=' + encodeURIComponent(aptInp.value.trim()), { headers: { Accept: 'application/json' } }).then(r => r.json()).then(list => {
+    fetch(APP.unpaid + '?apt=' + encodeURIComponent(aptInp.value.trim()), { headers: { Accept: 'application/json' } }).then(r => r.json()).then(list => {
       const sel = $('#manualInvoice'); sel.innerHTML = '';
       if (!list.length) { sel.innerHTML = '<option value="">Không có hóa đơn chưa thanh toán</option>'; $('#manualAmount').value = ''; return; }
       list.forEach(h => { const o = document.createElement('option'); o.value = h.ID_hoa_don; o.dataset.amount = Math.round(h.tong_tien); o.textContent = `${h.ma_hoa_don} – ${Number(h.tong_tien).toLocaleString('vi-VN')} đ`; sel.appendChild(o); });

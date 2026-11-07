@@ -1,21 +1,36 @@
 <?php
 /**
  * BỘ KIỂM THỬ TỰ ĐỘNG – chạy trên CSDL riêng (mặc định moons_test, khôi phục từ bản seed)
- *   MOONS_DB=moons_test php tests/run_tests.php [--http=http://127.0.0.1:8080/index.php]
+ *   php artisan moons:test --db=moons_test [--http=http://127.0.0.1:8080]
+ * (được nạp bởi lệnh Artisan App\Console\Commands\MoonsTest; biến $httpBase, $dbName do lệnh truyền vào)
  * Nhóm DB : quy tắc do CSDL tự bảo đảm (CHECK/UNIQUE/FK/TRIGGER) – thao tác SQL trực tiếp, bỏ qua Service
  * Nhóm SV : quy tắc do lớp Service bảo đảm
  * Nhóm PQ : phân quyền & bảo mật qua HTTP (yêu cầu máy chủ web đang chạy với CSDL seed)
  */
-require __DIR__ . '/../app/bootstrap.php';
-$_SESSION = [];
-$results = [];
-$httpBase = null;
-foreach ($argv as $a) if (str_starts_with($a, '--http=')) $httpBase = substr($a, 7);
+
+use App\Exceptions\BusinessException;
+use App\Services\AccountService;
+use App\Services\AiService;
+use App\Services\AuthService;
+use App\Services\BillingService;
+use App\Services\BookingService;
+use App\Services\CardService;
+use App\Services\FeeService;
+use App\Services\PaymentService;
+use App\Services\ReportService;
+use App\Services\ResidentService;
+use App\Services\TicketService;
+use App\Services\VehicleService;
+use App\Support\Db as DB;
+
+session()->flush();
+$GLOBALS['results'] = [];
+$results = &$GLOBALS['results'];
 
 function asUser(string $username): array
 {
     $u = DB::one("SELECT * FROM tai_khoan WHERE ten_dang_nhap=?", [$username]);
-    $_SESSION['user'] = $u;
+    session()->put('user', $u);
     return $u;
 }
 function resident(string $ma, string $type = 'chu_ho'): array
@@ -23,7 +38,7 @@ function resident(string $ma, string $type = 'chu_ho'): array
     $me = DB::one("SELECT nk.*, ch.ma_can_ho, ch.dien_tich, ch.thap_nha, ch.trang_thai_o, tk.vai_tro, tk.ID_tai_khoan, tk.ten_dang_nhap
                      FROM nhan_khau nk JOIN can_ho ch ON ch.ID_can_ho=nk.ID_can_ho JOIN tai_khoan tk ON tk.ID_tai_khoan=nk.ID_tai_khoan
                     WHERE ch.ma_can_ho=? AND nk.loai_cu_dan=? AND nk.trang_thai_duyet='da_duyet'", [$ma, $type]);
-    $_SESSION['user'] = DB::one("SELECT * FROM tai_khoan WHERE ID_tai_khoan=?", [$me['ID_tai_khoan']]);
+    session()->put('user', DB::one("SELECT * FROM tai_khoan WHERE ID_tai_khoan=?", [$me['ID_tai_khoan']]));
     return $me;
 }
 /** Căn hộ chủ hộ đang ở, không nợ quá hạn, chưa có lịch đặt – dùng cho kiểm thử tiện ích */
@@ -56,9 +71,9 @@ $signIpn = function (array $gd, string $code = '00', ?int $amount = null) {
 $unpaid = fn(string $ma) => DB::one("SELECT h.* FROM hoa_don h JOIN can_ho ch ON ch.ID_can_ho=h.ID_can_ho WHERE ch.ma_can_ho=? AND h.trang_thai_thanh_toan='chua_thanh_toan' ORDER BY ky_cuoc DESC LIMIT 1", [$ma]);
 $anyUnpaid = fn(int $skip = 0) => DB::one("SELECT h.*, ch.ma_can_ho FROM hoa_don h JOIN can_ho ch ON ch.ID_can_ho=h.ID_can_ho
      WHERE h.trang_thai_thanh_toan='chua_thanh_toan' AND ch.trang_thai_o='chu_ho_o' AND h.ky_cuoc='2026-10' ORDER BY h.ID_hoa_don LIMIT 1 OFFSET $skip");
-$D3 = date('Y-m-d', strtotime(today() . ' +3 days'));
+$D3 = date('Y-m-d', strtotime(app_today() . ' +3 days'));
 
-echo "=== CSDL kiểm thử: " . DB::val("SELECT DATABASE()") . " · ngày " . today() . " ===\n";
+echo "=== CSDL kiểm thử: " . DB::val("SELECT DATABASE()") . " · ngày " . app_today() . " ===\n";
 
 /* ================= NHÓM DB: CSDL tự bảo đảm ================= */
 $h = $anyUnpaid();
@@ -244,30 +259,43 @@ $bbq = (int)DB::val("SELECT ID_tien_ich FROM dich_vu_tien_ich WHERE ma_tien_ich=
 $pool = (int)DB::val("SELECT ID_tien_ich FROM dich_vu_tien_ich WHERE ma_tien_ich='POOL'");
 $hall = (int)DB::val("SELECT ID_tien_ich FROM dich_vu_tien_ich WHERE ma_tien_ich='HALL'");
 $u1 = cleanApt(0); $u2 = cleanApt(1);
-tc('SV-23', 'Đặt tiện ích hợp lệ sinh vé QR', 'BookingService', "{$u1['ma_can_ho']} đặt BBQ $D3 10:00, 6 người", 'Thành công, mã vé MOONS-BBQ-...',
-    fn() => 'Mã vé ' . BookingService::book($u1, $bbq, $D3, '10:00', 6)['code'], $has('MOONS-BBQ-'));
-tc('SV-24', 'Chống trùng khung giờ (tiện ích độc quyền)', 'BookingService (FOR UPDATE)', "{$u2['ma_can_ho']} đặt cùng BBQ $D3 10:00", 'Từ chối',
-    fn() => BookingService::book($u2, $bbq, $D3, '10:00', 4)['code'], $has('vừa được đăng ký'));
-tc('SV-25', 'Đặt đồng thời cùng khung giờ: chỉ 1 giao dịch thành công', 'BookingService (khóa dòng InnoDB)', '2 tiến trình PHP cùng đặt BBQ 14:00, giữ khóa 0,4 giây',
-    'Đúng 1 OK, 1 bị từ chối; CSDL chỉ có 1 lượt', function () use ($u1, $u2, $bbq, $D3) {
-        putenv('MOONS_DB=' . DB::val("SELECT DATABASE()"));   // tiến trình con kế thừa biến môi trường (Windows và Linux)
-        $cmd = fn($nk) => sprintf('%s %s %d %d %s 14:00', escapeshellarg(PHP_BINARY), escapeshellarg(__DIR__ . '/book_worker.php'), $nk, $bbq, $D3);
+// Chọn 2 khung giờ BBQ còn trống trong ngày D3 (dữ liệu mô phỏng có sẵn một số lượt đặt)
+$freeBbq = array_values(array_map(fn($s) => substr($s['start'], 0, 5), array_filter(BookingService::slots($bbq, $D3), fn($s) => $s['state'] === 'trong')));
+[$S1, $S2] = [$freeBbq[0] ?? '10:00', $freeBbq[1] ?? '14:00'];
+tc('SV-23', 'Đặt tiện ích hợp lệ sinh vé QR', 'BookingService', "{$u1['ma_can_ho']} đặt BBQ $D3 $S1, 6 người", 'Thành công, mã vé MOONS-BBQ-...',
+    fn() => 'Mã vé ' . BookingService::book($u1, $bbq, $D3, $S1, 6)['code'], $has('MOONS-BBQ-'));
+tc('SV-24', 'Chống trùng khung giờ (tiện ích độc quyền)', 'BookingService (FOR UPDATE)', "{$u2['ma_can_ho']} đặt cùng BBQ $D3 $S1", 'Từ chối',
+    fn() => BookingService::book($u2, $bbq, $D3, $S1, 4)['code'], $has('vừa được đăng ký'));
+tc('SV-25', 'Đặt đồng thời cùng khung giờ: chỉ 1 giao dịch thành công', 'BookingService (khóa dòng InnoDB)', "2 tiến trình PHP cùng đặt BBQ $S2, giữ khóa 0,4 giây",
+    'Đúng 1 OK, 1 bị từ chối; CSDL chỉ có 1 lượt', function () use ($u1, $u2, $bbq, $D3, $S2) {
+        $db = DB::val("SELECT DATABASE()");   // tiến trình con dùng cùng CSDL kiểm thử
+        $cmd = fn($nk) => sprintf('%s %s moons:book-worker %d %d %s %s --db=%s', escapeshellarg(PHP_BINARY), escapeshellarg(base_path('artisan')), $nk, $bbq, $D3, $S2, escapeshellarg($db));
         $p1 = popen($cmd($u1['ID_nhan_khau']), 'r'); $p2 = popen($cmd($u2['ID_nhan_khau']), 'r');
         $o1 = stream_get_contents($p1); $o2 = stream_get_contents($p2); pclose($p1); pclose($p2);
-        $n = DB::val("SELECT COUNT(*) FROM dat_tien_ich WHERE ID_tien_ich=? AND ngay_dat=? AND khung_gio_bat_dau='14:00:00' AND trang_thai_dat='da_xac_nhan'", [$bbq, $D3]);
+        $n = DB::val("SELECT COUNT(*) FROM dat_tien_ich WHERE ID_tien_ich=? AND ngay_dat=? AND khung_gio_bat_dau=? AND trang_thai_dat='da_xac_nhan'", [$bbq, $D3, $S2 . ':00']);
         return "P1: " . substr($o1, 0, 60) . " | P2: " . substr($o2, 0, 60) . " | Số lượt trong CSDL: $n";
     }, fn($a) => substr_count($a, 'OK MOONS') === 1 && substr_count($a, 'ERR') === 1 && str_ends_with($a, ': 1'));
 tc('SV-26', 'Hạn mức 2 lượt BBQ/căn hộ/tuần', 'BookingService', "{$u1['ma_can_ho']} đặt lượt BBQ thứ 3 trong tuần", 'Lượt thứ 3 bị từ chối', function () use ($u1, $bbq, $D3) {
-    $free = fn() => array_values(array_filter(BookingService::slots($bbq, $D3), fn($s) => $s['state'] === 'trong'));
-    while ((int)DB::val("SELECT COUNT(*) FROM dat_tien_ich WHERE ID_can_ho=? AND ID_tien_ich=? AND trang_thai_dat='da_xac_nhan'", [$u1['ID_can_ho'], $bbq]) < 2)
-        BookingService::book($u1, $bbq, $D3, $free()[0]['start'], 4);
-    return 'Đã có 2 lượt; lượt 3: ' . BookingService::book($u1, $bbq, $D3, $free()[0]['start'], 4)['code'];
+    // Khung giờ trống đầu tiên trong các ngày cùng tuần với D3 (không phụ thuộc kết quả ngẫu nhiên của SV-25)
+    $free = function () use ($bbq, $D3) {
+        foreach ([0, 1, -1, -2] as $d) {
+            $day = date('Y-m-d', strtotime("$D3 $d day"));
+            if ($day < app_today() || date('oW', strtotime($day)) !== date('oW', strtotime($D3))) continue;
+            foreach (BookingService::slots($bbq, $day) as $s) if ($s['state'] === 'trong') return [$day, $s['start']];
+        }
+        throw new RuntimeException('Không còn khung giờ trống trong tuần');
+    };
+    while ((int)DB::val("SELECT COUNT(*) FROM dat_tien_ich WHERE ID_can_ho=? AND ID_tien_ich=? AND trang_thai_dat='da_xac_nhan' AND YEARWEEK(ngay_dat,3)=YEARWEEK(?,3)", [$u1['ID_can_ho'], $bbq, $D3]) < 2) {
+        [$day, $start] = $free(); BookingService::book($u1, $bbq, $day, $start, 4);
+    }
+    [$day, $start] = $free();
+    return 'Đã có 2 lượt; lượt 3: ' . BookingService::book($u1, $bbq, $day, $start, 4)['code'];
 }, $has('hết hạn mức'));
 tc('SV-27', 'Vượt sức chứa bị từ chối', 'BookingService', "{$u2['ma_can_ho']} đặt BBQ 45 người (tối đa 40)", 'Từ chối',
     fn() => BookingService::book($u2, $bbq, $D3, '16:00', 45)['code'], $has('sức chứa'));
 tc('SV-28', 'Không đặt ngày trong quá khứ', 'BookingService', 'Đặt hồ bơi ngày hôm qua', 'Từ chối',
-    fn() => BookingService::book($u2, $pool, date('Y-m-d', strtotime(today() . ' -1 day')), '08:00', 2)['code'], $has('quá khứ'));
-$debtor = DB::val("SELECT ch.ma_can_ho FROM can_ho ch JOIN hoa_don h ON h.ID_can_ho=ch.ID_can_ho WHERE ch.trang_thai_o='chu_ho_o' AND h.trang_thai_thanh_toan='chua_thanh_toan' AND h.han_thanh_toan < ? - INTERVAL 30 DAY LIMIT 1", [today()]);
+    fn() => BookingService::book($u2, $pool, date('Y-m-d', strtotime(app_today() . ' -1 day')), '08:00', 2)['code'], $has('quá khứ'));
+$debtor = DB::val("SELECT ch.ma_can_ho FROM can_ho ch JOIN hoa_don h ON h.ID_can_ho=ch.ID_can_ho WHERE ch.trang_thai_o='chu_ho_o' AND h.trang_thai_thanh_toan='chua_thanh_toan' AND h.han_thanh_toan < ? - INTERVAL 30 DAY LIMIT 1", [app_today()]);
 $ud = resident($debtor);
 tc('SV-29', 'Nợ quá hạn > 30 ngày bị khóa đặt tiện ích độc quyền', 'BookingService', "$debtor (có HĐ quá hạn) đặt BBQ", 'Từ chối',
     fn() => BookingService::book($ud, $bbq, $D3, '08:00', 4)['code'], $has('quá hạn trên 30 ngày'));
@@ -275,10 +303,10 @@ tc('SV-30', 'Căn nợ quá hạn vẫn được dùng tiện ích dùng chung (
     fn() => 'Mã vé ' . BookingService::book($ud, $pool, $D3, '08:00', 2)['code'], $has('MOONS-POOL'));
 tc('SV-31', 'Hủy muộn (< 2 giờ) vẫn tính vào hạn mức tuần', 'BookingService', 'Đặt BBQ hôm nay khung giờ sắp tới rồi hủy ngay', 'Trạng thái huy_muon', function () use ($u2, $bbq) {
     $slot = null;
-    foreach (BookingService::slots($bbq, today()) as $s) if ($s['state'] === 'trong') { $slot = $s; break; }
-    $date = today();
+    foreach (BookingService::slots($bbq, app_today()) as $s) if ($s['state'] === 'trong') { $slot = $s; break; }
+    $date = app_today();
     if (!$slot || strtotime("$date {$slot['start']}") - time() >= 7200) {   // nếu không còn khung giờ trong 2 giờ tới: tạo dữ liệu trực tiếp
-        $date = today(); $start = date('H:00:00', time() + 3600);
+        $date = app_today(); $start = date('H:00:00', time() + 3600);
         DB::q("INSERT INTO dat_tien_ich(ma_ve,ngay_dat,khung_gio_bat_dau,khung_gio_ket_thuc,so_nguoi,ID_tien_ich,ID_nhan_khau,ID_can_ho,ID_nguoi_tao) VALUES ('TEST-SV31',?,?,?,4,?,?,?,?)",
             [$date, $start, date('H:00:00', time() + 3600 * 2 > strtotime('23:59') ? strtotime('23:59') : time() + 7200), $bbq, $u2['ID_nhan_khau'], $u2['ID_can_ho'], $u2['ID_tai_khoan']]);
         $id = DB::id();
@@ -358,7 +386,7 @@ tc('SV-44', 'Người từ 14 tuổi phải khai báo CCCD', 'ResidentService', 
 tc('SV-45', 'Duyệt khách thuê cấp tài khoản mật khẩu tạm (bắt buộc đổi)', 'ResidentService', 'Chủ hộ A-1001 khai báo khách thuê, Lễ tân duyệt', 'Tạo tài khoản khach_thue, phai_doi_mat_khau=1',
     function () use ($me) {
         $id = ResidentService::declare($me, ['loai_cu_dan' => 'khach_thue', 'ho_ten' => 'Phan Khách Thuê', 'ngay_sinh' => '1995-05-05', 'quan_he_chu_ho' => 'x', 'gioi_tinh' => 'nu',
-            'so_cccd' => '079195009999', 'so_dien_thoai' => '0911222333', 'email' => '', 'so_hop_dong' => 'HDT-TEST', 'ngay_bat_dau_hop_dong' => today(),
+            'so_cccd' => '079195009999', 'so_dien_thoai' => '0911222333', 'email' => '', 'so_hop_dong' => 'HDT-TEST', 'ngay_bat_dau_hop_dong' => app_today(),
             'ngay_ket_thuc_hop_dong' => date('Y-m-d', strtotime('+1 year')), 'quan_he' => ''], 'seed/hop_dong.jpg');
         asUser('tantl');
         $acc = ResidentService::approve($id);
@@ -388,24 +416,28 @@ if ($httpBase) {
             $r = curl_exec($c); $code = curl_getinfo($c, CURLINFO_HTTP_CODE); curl_close($c);
             return [$code, $r];
         };
-        [, $page] = $req("$httpBase?r=auth/login");
-        preg_match('/name="_csrf" value="([a-f0-9]+)"/', $page, $m);
+        [, $page] = $req("$httpBase/auth/login");
+        preg_match('/name="_token" value="([^"]+)"/', $page, $m);
         $tok = $m[1] ?? '';
-        if ($user) $req("$httpBase?r=auth/login", ['_csrf' => $tok, 'login' => $user, 'password' => 'Moons@123']);
-        if ($method === 'POST') { [$code, $r] = $req("$httpBase?r=$route", ($csrf ? ['_csrf' => $tok] : []) + $post); }
-        else [$code, $r] = $req("$httpBase?r=$route");
+        if ($user) {
+            [, $r] = $req("$httpBase/auth/login", ['_token' => $tok, 'login' => $user, 'password' => 'Moons@123']);
+            [, $page] = $req("$httpBase/auth/password");   // token CSRF mới sau khi đăng nhập (session được tạo lại)
+            if (preg_match('/name="_token" value="([^"]+)"/', $page, $m)) $tok = $m[1];
+        }
+        if ($method === 'POST') { [$code, $r] = $req("$httpBase/$route", ($csrf ? ['_token' => $tok] : []) + $post); }
+        else [$code, $r] = $req("$httpBase/$route");
         preg_match('/^Location: (.*)$/mi', $r, $loc);
         return "HTTP $code" . (isset($loc[1]) ? ' → ' . trim($loc[1]) : '');
     };
-    tc('PQ-01', 'Chưa đăng nhập bị chuyển về trang đăng nhập', 'Middleware Auth::guard', 'GET admin/dashboard (ẩn danh)', 'HTTP 302 → auth/login', fn() => $http(null, 'admin/dashboard'), $has('auth%2Flogin'));
+    tc('PQ-01', 'Chưa đăng nhập bị chuyển về trang đăng nhập', 'RoleMiddleware', 'GET admin/dashboard (ẩn danh)', 'HTTP 302 → auth/login', fn() => $http(null, 'admin/dashboard'), $has('/auth/login'));
     tc('PQ-02', 'Cư dân không truy cập phân hệ quản trị', 'Middleware RBAC', 'Chủ hộ 0981230001 GET admin/dashboard', 'HTTP 403', fn() => $http('0981230001', 'admin/dashboard'), $has('HTTP 403'));
     tc('PQ-03', 'Lễ tân không truy cập chỉ số & hóa đơn', 'Middleware RBAC', 'tantl GET admin/billing', 'HTTP 403', fn() => $http('tantl', 'admin/billing'), $has('HTTP 403'));
     tc('PQ-04', 'Kế toán không được phê duyệt phát hành', 'Middleware RBAC', 'toannk POST admin/invoices-approve', 'HTTP 403', fn() => $http('toannk', 'admin/invoices-approve', 'POST', ['ky' => '2026-10', 'tower' => 'C']), $has('HTTP 403'));
     tc('PQ-05', 'Kỹ thuật viên không vào Phân quyền & AI', 'Middleware RBAC', 'namhv GET admin/system', 'HTTP 403', fn() => $http('namhv', 'admin/system'), $has('HTTP 403'));
     tc('PQ-06', 'Admin không gạch nợ thủ công (tách biệt tài chính)', 'Middleware RBAC', 'trilq POST admin/payment-manual', 'HTTP 403', fn() => $http('trilq', 'admin/payment-manual', 'POST', ['invoice' => 1]), $has('HTTP 403'));
-    tc('PQ-07', 'Yêu cầu POST thiếu CSRF token bị chặn', 'Csrf::check', 'Chủ hộ POST tickets/cancel không có _csrf', 'HTTP 419', fn() => $http('0981230001', 'tickets/cancel', 'POST', ['id' => 1], false), $has('HTTP 419'));
+    tc('PQ-07', 'Yêu cầu POST thiếu CSRF token bị chặn', 'ValidateCsrfToken', 'Chủ hộ POST tickets/cancel không có _token', 'HTTP 419', fn() => $http('0981230001', 'tickets/cancel', 'POST', ['id' => 1], false), $has('HTTP 419'));
     tc('PQ-08', 'IPN công khai nhưng không giả mạo được', 'PaymentService', 'GET vnpay/ipn với chữ ký giả', 'RspCode 97', function () use ($httpBase) {
-        return file_get_contents("$httpBase?r=vnpay/ipn&vnp_TxnRef=VNP1&vnp_Amount=100&vnp_ResponseCode=00&vnp_SecureHash=" . str_repeat('0', 128));
+        return file_get_contents("$httpBase/vnpay/ipn?vnp_TxnRef=VNP1&vnp_Amount=100&vnp_ResponseCode=00&vnp_SecureHash=" . str_repeat('0', 128));
     }, $has('"97"'));
 }
 
@@ -426,6 +458,6 @@ foreach ($checks as $k => $q) { $n = (int)DB::val($q); $cons[] = ['check' => $k,
 
 $pass = count(array_filter($results, fn($r) => $r['pass']));
 printf("\nTỔNG: %d/%d ca đạt\n", $pass, count($results));
-file_put_contents(__DIR__ . '/results.json', json_encode(['date' => now(), 'db' => DB::val("SELECT DATABASE()"), 'version' => DB::val("SELECT VERSION()"),
+file_put_contents(__DIR__ . '/results.json', json_encode(['date' => app_now(), 'db' => DB::val("SELECT DATABASE()"), 'version' => DB::val("SELECT VERSION()"),
     'php' => PHP_VERSION, 'results' => $results, 'consistency' => $cons], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-exit($pass === count($results) ? 0 : 1);
+return $pass === count($results) ? 0 : 1;

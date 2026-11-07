@@ -1,5 +1,5 @@
 {
-    "date": "2026-11-05 00:08:27",
+    "date": "2026-11-04 18:35:53",
     "db": "moons_test",
     "version": "10.11.14-MariaDB-0ubuntu0.24.04.1",
     "php": "8.3.6",
@@ -271,7 +271,7 @@
             "layer": "ReportService",
             "input": "So sánh công nợ với tổng HĐ chưa thanh toán",
             "expected": "Bằng nhau, không tính HĐ hủy",
-            "actual": "KPI=2.236.469.226 đ; Σ chưa TT=2.236.469.226 đ; HĐ hủy=1.551.420 đ",
+            "actual": "KPI=2.289.966.456 đ; Σ chưa TT=2.289.966.456 đ; HĐ hủy=1.551.420 đ",
             "pass": true
         },
         {
@@ -377,16 +377,16 @@
             "id": "SV-23",
             "rule": "Đặt tiện ích hợp lệ sinh vé QR",
             "layer": "BookingService",
-            "input": "A-0201 đặt BBQ 2026-11-08 10:00, 6 người",
+            "input": "A-0201 đặt BBQ 2026-11-07 12:00, 6 người",
             "expected": "Thành công, mã vé MOONS-BBQ-...",
-            "actual": "Mã vé MOONS-BBQ-A0201-20261108-10-538E",
+            "actual": "Mã vé MOONS-BBQ-A0201-20261107-12-D9F8",
             "pass": true
         },
         {
             "id": "SV-24",
             "rule": "Chống trùng khung giờ (tiện ích độc quyền)",
             "layer": "BookingService (FOR UPDATE)",
-            "input": "A-0202 đặt cùng BBQ 2026-11-08 10:00",
+            "input": "A-0202 đặt cùng BBQ 2026-11-07 12:00",
             "expected": "Từ chối",
             "actual": "LỖI: Khung giờ này vừa được đăng ký bởi cư dân khác, vui lòng chọn khung giờ khác.",
             "pass": true
@@ -397,7 +397,7 @@
             "layer": "BookingService (khóa dòng InnoDB)",
             "input": "2 tiến trình PHP cùng đặt BBQ 14:00, giữ khóa 0,4 giây",
             "expected": "Đúng 1 OK, 1 bị từ chối; CSDL chỉ có 1 lượt",
-            "actual": "P1: ERR Khung giờ này vừa được đăng ký bởi cư dâ | P2: OK MOONS-BBQ-A0202-20261108-14-83D8 | Số lượt trong CSDL: 1",
+            "actual": "P1: ERR Khung giờ này vừa được đăng ký bởi cư dâ | P2: OK MOONS-BBQ-A0202-20261107-14-FAE6 | Số lượt trong CSDL: 1",
             "pass": true
         },
         {
@@ -442,7 +442,7 @@
             "layer": "BookingService",
             "input": "A-0106 đặt hồ bơi",
             "expected": "Thành công",
-            "actual": "Mã vé MOONS-POOL-A0106-20261108-08-158A",
+            "actual": "Mã vé MOONS-POOL-A0106-20261107-08-78F0",
             "pass": true
         },
         {
@@ -458,9 +458,9 @@
             "id": "SV-32",
             "rule": "Khóa lịch bảo trì tự hủy lịch trùng và chặn đặt mới",
             "layer": "BookingService",
-            "input": "KTT khóa BBQ 2026-11-08 08:00–22:00",
+            "input": "KTT khóa BBQ 2026-11-07 08:00–22:00",
             "expected": "Hủy ≥1 lịch; đặt mới bị từ chối",
-            "actual": "Đã hủy 5 lịch; đặt mới: Khung giờ này đang khóa để bảo trì.",
+            "actual": "Đã hủy 7 lịch; đặt mới: Khung giờ này đang khóa để bảo trì.",
             "pass": true
         },
         {
@@ -469,7 +469,7 @@
             "layer": "BookingService",
             "input": "Lễ tân quét vé của ngày khác",
             "expected": "Từ chối",
-            "actual": "LỖI: Vé dùng cho ngày 08\/11\/2026, không phải hôm nay.",
+            "actual": "LỖI: Vé dùng cho ngày 07\/11\/2026, không phải hôm nay.",
             "pass": true
         },
         {
@@ -512,7 +512,7 @@
             "id": "SV-38",
             "rule": "Không nhảy cóc trạng thái Kanban",
             "layer": "TicketService",
-            "input": "Chuyển TK-0011 từ Đã phân công sang Hoàn tất",
+            "input": "Chuyển TK-0008 từ Đã phân công sang Hoàn tất",
             "expected": "Từ chối",
             "actual": "LỖI: Không thể chuyển từ \"Đã phân công\" sang \"Hoàn tất\".",
             "pass": true
@@ -610,10 +610,10 @@
         {
             "id": "PQ-01",
             "rule": "Chưa đăng nhập bị chuyển về trang đăng nhập",
-            "layer": "Middleware Auth::guard",
+            "layer": "RoleMiddleware",
             "input": "GET admin\/dashboard (ẩn danh)",
             "expected": "HTTP 302 → auth\/login",
-            "actual": "HTTP 302 → \/index.php?r=auth%2Flogin",
+            "actual": "HTTP 302 → http:\/\/127.0.0.1:8080\/auth\/login",
             "pass": true
         },
         {
@@ -664,8 +664,8 @@
         {
             "id": "PQ-07",
             "rule": "Yêu cầu POST thiếu CSRF token bị chặn",
-            "layer": "Csrf::check",
-            "input": "Chủ hộ POST tickets\/cancel không có _csrf",
+            "layer": "ValidateCsrfToken",
+            "input": "Chủ hộ POST tickets\/cancel không có _token",
             "expected": "HTTP 419",
             "actual": "HTTP 419",
             "pass": true

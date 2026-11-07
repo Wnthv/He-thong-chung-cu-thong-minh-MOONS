@@ -10,17 +10,8 @@ def render(name, dot):
 def esc(s): return s.replace('"', '\\"')
 
 # ---------------- Kiến trúc ----------------
-render('kien_truc', f'''digraph G {{ rankdir=LR; fontname="{F}"; node[fontname="{F}",fontsize=11,shape=box,style="rounded,filled",fillcolor="#F2F6F3",color="{G}"]; edge[fontname="{F}",fontsize=9,color="#555555"];
-subgraph cluster_c {{label="Client (trình duyệt)";style="rounded,dashed";color="#999999";fontname="{F}";
- m[label="Mobile Web – Cư dân\\n(Chủ hộ, Khách thuê)"]; d[label="Desktop Web – Ban Quản lý\\n(Lễ tân, Kế toán, KTT, ĐPV, KTV, Admin)"];}}
-subgraph cluster_s {{label="Máy chủ Web – PHP 8 (Apache/WAMP)";style="rounded";color="{G}";fontname="{F}";
- fc[label="Front Controller\\npublic/index.php\\n(Router + RBAC + CSRF)",fillcolor="#E7EEEA"];
- c[label="Controllers\\nAuth, Resident, Payment, Admin"]; s[label="Services (nghiệp vụ)\\nBilling, Payment, Booking, Vehicle,\\nResident, Ticket, AI, Report, Audit"];
- v[label="Views (PHP template)\\nlayouts/resident, layouts/admin"]; fc->c; c->s; c->v; }}
-db[label="MySQL 8 / MariaDB\\n15 bảng InnoDB\\nCHECK · UNIQUE · FK · 16 TRIGGER",shape=cylinder,fillcolor="#FFF7E6",color="#B7791F"];
-vn[label="Cổng VNPay\\n(HMAC SHA512, IPN)",fillcolor="#E6F0FA",color="#005BAA"]; gm[label="Google Gemini API\\n(tùy chọn)",fillcolor="#E6F0FA",color="#005BAA"];
-m->fc[label="HTTPS"]; d->fc[label="HTTPS"]; s->db[label="PDO\\nprepared statement"]; s->vn[label="URL thanh toán"]; vn->fc[label="IPN / ReturnUrl"]; s->gm[label="ngữ cảnh RAG"];
-}}''')
+# Sơ đồ kiến trúc Laravel: xem kien_truc.dot (sinh ảnh: dot -Tpng -Gdpi=170 kien_truc.dot -o kien_truc.png)
+subprocess.run(['dot', '-Tpng', '-Gdpi=170', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'kien_truc.dot'), '-o', f'{OUT}/kien_truc.png'], check=True)
 
 # ---------------- BPMN ----------------
 def bpmn(name, lanes, flows, title=''):
