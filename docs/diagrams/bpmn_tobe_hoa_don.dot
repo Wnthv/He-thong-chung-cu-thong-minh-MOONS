@@ -1,0 +1,42 @@
+digraph G { rankdir=LR; compound=true; newrank=true; fontname="DejaVu Sans"; label="TO-BE: Lập hóa đơn, phê duyệt và thanh toán"; labelloc=t; fontsize=13; nodesep=0.35; ranksep=0.35;
+node[fontname="DejaVu Sans",fontsize=10]; edge[fontname="DejaVu Sans",fontsize=9,color="#444444",arrowsize=0.7];
+subgraph cluster_0 { label="Kế toán"; labeljust=l; style=filled; fillcolor="#EEF3F0"; color="#99AAAA";
+s[shape=circle,label="",width=0.3,style=filled,fillcolor="#C6F6D5",color="#2F855A"];
+k1[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Nhập chỉ số\nhàng loạt theo tháp"];
+k2[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Ghi chú xác minh\ncông tơ"];
+k3[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Lập hóa đơn\nhàng loạt"];
+}
+subgraph cluster_1 { label="Hệ thống"; labeljust=l; style=filled; fillcolor="#F7F8F6"; color="#99AAAA";
+h1[shape=diamond,label="Mới ≥ cũ và\n≤ 3×TB 3 kỳ?",style=filled,fillcolor="#FEFCBF",color="#B7791F",fontsize=9,width=0.6,height=0.6];
+h2[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Tính điện 6 bậc, nước,\nphí quản lý, phí xe"];
+h3[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="HĐ Chờ duyệt"];
+h4[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Phát hành, khóa sổ\nchỉ số"];
+h5[shape=diamond,label="IPN hợp lệ?\n(chữ ký, số tiền)",style=filled,fillcolor="#FEFCBF",color="#B7791F",fontsize=9,width=0.6,height=0.6];
+h6[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Gạch nợ tự động"];
+h7[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Ngoại lệ đối soát"];
+}
+subgraph cluster_2 { label="Kế toán trưởng"; labeljust=l; style=filled; fillcolor="#EEF3F0"; color="#99AAAA";
+t1[shape=diamond,label="Phê duyệt?",style=filled,fillcolor="#FEFCBF",color="#B7791F",fontsize=9,width=0.6,height=0.6];
+t2[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Hủy kèm lý do,\nmở khóa chỉ số"];
+}
+subgraph cluster_3 { label="Cư dân / VNPay"; labeljust=l; style=filled; fillcolor="#F7F8F6"; color="#99AAAA";
+r1[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Xem hóa đơn,\nthanh toán VNPay"];
+e[shape=doublecircle,label="",width=0.25,style=filled,fillcolor="#FED7D7",color="#C53030"];
+}
+s->k1[label=""];
+k1->h1[label=""];
+h1->k2[label="Bất thường"];
+k2->h2[label=""];
+h1->h2[label="Hợp lệ"];
+k3->h2[label=""];
+h2->h3[label=""];
+h3->t1[label=""];
+t1->h4[label="Duyệt"];
+t1->t2[label="Sai sót"];
+t2->k1[label=""];
+h4->r1[label=""];
+r1->h5[label=""];
+h5->h6[label="Có"];
+h5->h7[label="Không"];
+h6->e[label=""];
+}

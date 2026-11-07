@@ -1,0 +1,31 @@
+digraph G { rankdir=LR; compound=true; newrank=true; fontname="DejaVu Sans"; label="AS-IS: Đăng ký thẻ xe thủ công"; labelloc=t; fontsize=13; nodesep=0.35; ranksep=0.35;
+node[fontname="DejaVu Sans",fontsize=10]; edge[fontname="DejaVu Sans",fontsize=9,color="#444444",arrowsize=0.7];
+subgraph cluster_0 { label="Cư dân"; labeljust=l; style=filled; fillcolor="#EEF3F0"; color="#99AAAA";
+s[shape=circle,label="",width=0.3,style=filled,fillcolor="#C6F6D5",color="#2F855A"];
+a1[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Lấy mẫu đơn\ntại quầy"];
+a2[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Điền đơn giấy,\nphotocopy cà vẹt"];
+a6[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Đến quầy hỏi\ntiến độ (nhiều lần)"];
+e[shape=doublecircle,label="",width=0.25,style=filled,fillcolor="#FED7D7",color="#C53030"];
+}
+subgraph cluster_1 { label="Lễ tân"; labeljust=l; style=filled; fillcolor="#F7F8F6"; color="#99AAAA";
+b1[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Nhận đơn giấy"];
+b2[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Tra Excel đếm\nsố xe của căn hộ"];
+g[shape=diamond,label="Hợp lệ?",style=filled,fillcolor="#FEFCBF",color="#B7791F",fontsize=9,width=0.6,height=0.6];
+b3[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Gọi điện báo\nnộp lại từ đầu"];
+b4[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Ghi vào Excel,\nphát thẻ"];
+}
+subgraph cluster_2 { label="Kế toán"; labeljust=l; style=filled; fillcolor="#EEF3F0"; color="#99AAAA";
+c1[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Nhập tay phí xe\nvào file hóa đơn"];
+}
+s->a1[label=""];
+a1->a2[label=""];
+a2->b1[label=""];
+b1->b2[label=""];
+b2->g[label=""];
+g->b3[label="Không"];
+b3->a2[label=""];
+g->b4[label="Có"];
+b4->c1[label="Email/Zalo",style=dashed];
+a2->a6[label="chờ",style=dashed];
+b4->e[label=""];
+}

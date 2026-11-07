@@ -1,0 +1,36 @@
+digraph G { rankdir=LR; compound=true; newrank=true; fontname="DejaVu Sans"; label="TO-BE: Đăng ký và duyệt thẻ xe trực tuyến"; labelloc=t; fontsize=13; nodesep=0.35; ranksep=0.35;
+node[fontname="DejaVu Sans",fontsize=10]; edge[fontname="DejaVu Sans",fontsize=9,color="#444444",arrowsize=0.7];
+subgraph cluster_0 { label="Cư dân"; labeljust=l; style=filled; fillcolor="#EEF3F0"; color="#99AAAA";
+s[shape=circle,label="",width=0.3,style=filled,fillcolor="#C6F6D5",color="#2F855A"];
+a1[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Nhập biển số, loại xe,\ntải ảnh cà vẹt"];
+a2[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Bổ sung hồ sơ\n(giữ lịch sử)"];
+a3[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Nhận thông báo,\nnhận thẻ tại quầy"];
+e[shape=doublecircle,label="",width=0.25,style=filled,fillcolor="#FED7D7",color="#C53030"];
+}
+subgraph cluster_1 { label="Hệ thống"; labeljust=l; style=filled; fillcolor="#F7F8F6"; color="#99AAAA";
+h1[shape=diamond,label="Đúng định dạng,\nchưa trùng,\ncòn định mức?",style=filled,fillcolor="#FEFCBF",color="#B7791F",fontsize=9,width=0.6,height=0.6];
+h2[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Lưu hồ sơ\nChờ duyệt"];
+h3[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Khóa dòng căn hộ,\nkiểm tra lại định mức"];
+h4[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Đổi trạng thái Đã duyệt,\nlưu người duyệt"];
+h5[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Tự cộng phí gửi xe\nvào kỳ hóa đơn sau"];
+}
+subgraph cluster_2 { label="Lễ tân"; labeljust=l; style=filled; fillcolor="#EEF3F0"; color="#99AAAA";
+b1[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Đối chiếu ảnh cà vẹt"];
+g[shape=diamond,label="Quyết định",style=filled,fillcolor="#FEFCBF",color="#B7791F",fontsize=9,width=0.6,height=0.6];
+b2[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Nạp mã RFID,\ncấp thẻ"];
+}
+s->a1[label=""];
+a1->h1[label=""];
+h1->a1[label="Không"];
+h1->h2[label="Có"];
+h2->b1[label=""];
+b1->g[label=""];
+g->a2[label="Yêu cầu bổ sung"];
+a2->h2[label=""];
+g->h3[label="Duyệt"];
+h3->h4[label=""];
+h4->b2[label=""];
+h4->h5[label=""];
+b2->a3[label=""];
+a3->e[label=""];
+}

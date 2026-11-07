@@ -1,0 +1,725 @@
+{
+    "date": "2026-11-05 00:08:27",
+    "db": "moons_test",
+    "version": "10.11.14-MariaDB-0ubuntu0.24.04.1",
+    "php": "8.3.6",
+    "results": [
+        {
+            "id": "DB-01",
+            "rule": "tong_tien luôn bằng tổng thành tiền chi tiết",
+            "layer": "TRIGGER trg_hd_bu",
+            "input": "UPDATE hoa_don SET tong_tien=1 (HĐ HD-202610-A0101)",
+            "expected": "Giá trị bị trigger tính lại, không đổi",
+            "actual": "tong_tien sau UPDATE = 2.902.150 đ (ban đầu 2.902.150 đ)",
+            "pass": true
+        },
+        {
+            "id": "DB-02",
+            "rule": "Không sửa chi tiết của hóa đơn đã phát hành",
+            "layer": "TRIGGER trg_cthd_bi\/bu\/bd",
+            "input": "INSERT\/UPDATE\/DELETE chi_tiet_hoa_don của HĐ chưa thanh toán",
+            "expected": "Bị chặn: HD_DA_PHAT_HANH",
+            "actual": "LỖI: Hóa đơn đã phát hành, không được sửa chi tiết. Hãy hủy và lập hóa đơn thay thế.",
+            "pass": true
+        },
+        {
+            "id": "DB-03",
+            "rule": "Không gạch nợ trực tiếp khi chưa có giao dịch thành công",
+            "layer": "TRIGGER trg_hd_bu",
+            "input": "UPDATE hoa_don SET trang_thai='da_thanh_toan'",
+            "expected": "Bị chặn: HD_CHUA_CO_GIAO_DICH",
+            "actual": "LỖI: Không thể gạch nợ khi chưa có giao dịch thành công khớp số tiền.",
+            "pass": true
+        },
+        {
+            "id": "DB-04",
+            "rule": "Giao dịch thành công phải khớp số tiền hóa đơn",
+            "layer": "TRIGGER trg_gd_bi",
+            "input": "Ghi GD 'thành công' 1.000 đ cho HĐ HD-202610-A0101 (2.902.150 đ)",
+            "expected": "Bị chặn: GD_KHONG_HOP_LE",
+            "actual": "LỖI: Giao dịch thành công phải khớp số tiền của hóa đơn đang chưa thanh toán (hóa đơn có thể đã được thanh toán bằng hình thức khác).",
+            "pass": true
+        },
+        {
+            "id": "DB-05",
+            "rule": "Mỗi hóa đơn tối đa 1 giao dịch thành công",
+            "layer": "TRIGGER trg_gd_bi + UNIQUE uq_gd_hd_tc",
+            "input": "Thêm GD thành công thứ 2 cho HĐ HD-202511-A0101",
+            "expected": "Bị chặn (trigger chặn trước, UNIQUE là lớp bảo vệ thứ hai)",
+            "actual": "LỖI: Giao dịch thành công phải khớp số tiền của hóa đơn đang chưa thanh toán (hóa đơn có thể đã được thanh toán bằng hình thức khác).",
+            "pass": true
+        },
+        {
+            "id": "DB-06",
+            "rule": "Mỗi căn hộ 1 hóa đơn còn hiệu lực\/kỳ",
+            "layer": "UNIQUE uq_hd_ky (cột sinh)",
+            "input": "Lập thêm HĐ kỳ 2026-10 cho cùng căn hộ",
+            "expected": "Bị chặn: trùng khóa",
+            "actual": "LỖI: Căn hộ đã có hóa đơn còn hiệu lực trong kỳ này.",
+            "pass": true
+        },
+        {
+            "id": "DB-07",
+            "rule": "Hóa đơn chỉ được hủy, không được xóa",
+            "layer": "TRIGGER trg_hd_bd + FK RESTRICT",
+            "input": "DELETE FROM hoa_don (HĐ HD-202511-A0101)",
+            "expected": "Bị chặn",
+            "actual": "LỖI: Hóa đơn chỉ được hủy, không được xóa.",
+            "pass": true
+        },
+        {
+            "id": "DB-08",
+            "rule": "Không xóa căn hộ còn dữ liệu liên quan (truy vết)",
+            "layer": "FK ON DELETE RESTRICT",
+            "input": "DELETE FROM can_ho WHERE ma_can_ho='A-1001'",
+            "expected": "Bị chặn bởi khóa ngoại",
+            "actual": "LỖI: Dữ liệu không hợp lệ: SQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`moons_test`.`chi_so_dien_nuoc`, CONSTRAINT `fk_cs_ch` FOREIGN KEY (`ID_can_ho`) REFERENCES `can_ho` (`ID_can_ho`))",
+            "pass": true
+        },
+        {
+            "id": "DB-09",
+            "rule": "Chỉ số đã khóa sổ không được sửa",
+            "layer": "TRIGGER trg_cs_bu",
+            "input": "UPDATE chi_so_dien_moi của dòng đã khóa sổ",
+            "expected": "Bị chặn: CS_KHOA_SO",
+            "actual": "LỖI: Chỉ số kỳ này đã khóa sổ sau khi phát hành hóa đơn.",
+            "pass": true
+        },
+        {
+            "id": "DB-10",
+            "rule": "Chỉ số mới ≥ chỉ số cũ",
+            "layer": "CHECK ck_cs_dien",
+            "input": "INSERT chỉ số điện cũ 500, mới 400",
+            "expected": "Bị chặn",
+            "actual": "LỖI: Chỉ số điện mới phải lớn hơn hoặc bằng chỉ số cũ.",
+            "pass": true
+        },
+        {
+            "id": "DB-11",
+            "rule": "Thành tiền = số lượng × đơn giá",
+            "layer": "CHECK ck_cthd_tt",
+            "input": "INSERT dòng 10 × 1.000 = 99.999",
+            "expected": "Bị chặn",
+            "actual": "LỖI: Dữ liệu không hợp lệ: SQLSTATE[23000]: Integrity constraint violation: 4025 CONSTRAINT `ck_cthd_tt` failed for `moons_test`.`chi_tiet_hoa_don`",
+            "pass": true
+        },
+        {
+            "id": "DB-12",
+            "rule": "Biển số không trùng giữa các hồ sơ còn hiệu lực",
+            "layer": "UNIQUE uq_tx_bien_so (cột sinh)",
+            "input": "Đăng ký lại biển 59T8-459.22 ở căn khác",
+            "expected": "Bị chặn",
+            "actual": "LỖI: Biển số xe này đã được đăng ký trên hệ thống.",
+            "pass": true
+        },
+        {
+            "id": "DB-13",
+            "rule": "Biển số của hồ sơ đã hủy được đăng ký lại",
+            "layer": "UNIQUE trên cột sinh (NULL khi đã hủy)",
+            "input": "Hủy hồ sơ rồi đăng ký lại cùng biển số",
+            "expected": "Thành công",
+            "actual": "Câu lệnh thực thi thành công",
+            "pass": true
+        },
+        {
+            "id": "DB-14",
+            "rule": "Biển số đúng định dạng Việt Nam",
+            "layer": "CHECK ck_tx_bien_so",
+            "input": "Biển số 'ABC-123'",
+            "expected": "Bị chặn",
+            "actual": "LỖI: Biển số không đúng định dạng biển số xe Việt Nam (VD: 51G-102.24, 59X3-343.41).",
+            "pass": true
+        },
+        {
+            "id": "DB-15",
+            "rule": "Phải có ảnh nghiệm thu trước khi chờ nghiệm thu\/hoàn tất",
+            "layer": "CHECK ck_psc_anh",
+            "input": "UPDATE phiếu TK-0015 sang cho_nghiem_thu, không ảnh",
+            "expected": "Bị chặn",
+            "actual": "LỖI: Phải đính kèm ít nhất 01 ảnh nghiệm thu trước khi đề xuất nghiệm thu.",
+            "pass": true
+        },
+        {
+            "id": "DB-16",
+            "rule": "Khách thuê phải có hợp đồng hợp lệ",
+            "layer": "CHECK ck_nk_hop_dong",
+            "input": "INSERT khách thuê ngày kết thúc < ngày bắt đầu",
+            "expected": "Bị chặn",
+            "actual": "LỖI: Khách thuê phải có số hợp đồng, ngày bắt đầu và ngày kết thúc hợp lệ.",
+            "pass": true
+        },
+        {
+            "id": "DB-17",
+            "rule": "Giao dịch đã kết thúc là bất biến",
+            "layer": "TRIGGER trg_gd_bu\/bd",
+            "input": "UPDATE so_tien của GD VNP2512091013001000",
+            "expected": "Bị chặn",
+            "actual": "LỖI: Giao dịch đã kết thúc, không được sửa.",
+            "pass": true
+        },
+        {
+            "id": "DB-18",
+            "rule": "Nhật ký thao tác chỉ ghi thêm",
+            "layer": "TRIGGER trg_nk_bu\/bd",
+            "input": "DELETE FROM nhat_ky_thao_tac",
+            "expected": "Bị chặn",
+            "actual": "LỖI: Dữ liệu không hợp lệ: SQLSTATE[45000]: <<Unknown error>>: 1644 NK_CHI_GHI_THEM: nhat ky khong duoc xoa",
+            "pass": true
+        },
+        {
+            "id": "DB-19",
+            "rule": "Chỉ chuyển trạng thái hóa đơn hợp lệ",
+            "layer": "TRIGGER trg_hd_bu",
+            "input": "UPDATE HĐ đã thanh toán về 'chua_thanh_toan'",
+            "expected": "Bị chặn",
+            "actual": "LỖI: Hóa đơn đã thanh toán, không thể thay đổi trạng thái.",
+            "pass": true
+        },
+        {
+            "id": "SV-01",
+            "rule": "Tính tiền điện 6 bậc (mỗi bậc 1 dòng)",
+            "layer": "FeeService",
+            "input": "117 kWh",
+            "expected": "50×1.984 + 50×2.050 + 17×2.380 = 242.160 đ",
+            "actual": "50×1.984 + 50×2.050 + 17×2.380 = 242.160 đ",
+            "pass": true
+        },
+        {
+            "id": "SV-02",
+            "rule": "Lưu chỉ số: chỉ số mới nhỏ hơn cũ bị từ chối theo từng dòng",
+            "layer": "BillingService",
+            "input": "Kế toán nhập điện mới = 1 cho 1 căn tháp D kỳ 2026-10",
+            "expected": "Báo lỗi dòng, các dòng khác vẫn lưu",
+            "actual": "saved=0; lỗi: D-0101: Chỉ số điện mới (1) nhỏ hơn chỉ số cũ (5055).",
+            "pass": true
+        },
+        {
+            "id": "SV-03",
+            "rule": "Tiêu thụ > 3 lần TB 3 kỳ phải có ghi chú xác minh",
+            "layer": "BillingService",
+            "input": "Lập HĐ tháp D kỳ 2026-10 (D-1005, D-1203 bất thường, chưa ghi chú)",
+            "expected": "Bỏ qua 2 căn bất thường, lập HĐ Chờ duyệt cho các căn còn lại",
+            "actual": "Lập 271 HĐ; bỏ qua: D-1005: tiêu thụ bất thường chưa có ghi chú xác minh | D-1203: tiêu thụ bất thường chưa có ghi chú xác minh",
+            "pass": true
+        },
+        {
+            "id": "SV-04",
+            "rule": "Ghi chú xác minh hợp lệ thì được lập hóa đơn",
+            "layer": "BillingService",
+            "input": "Nhập ghi chú cho D-1005 rồi lập lại",
+            "expected": "Lập thêm 1 HĐ",
+            "actual": "Lập 1 HĐ",
+            "pass": true
+        },
+        {
+            "id": "SV-05",
+            "rule": "Hóa đơn mới lập ở trạng thái Chờ duyệt, tổng = Σ chi tiết",
+            "layer": "BillingService + TRIGGER",
+            "input": "Kiểm tra HĐ D-1005 vừa lập",
+            "expected": "Chờ duyệt, tong_tien = tổng dòng",
+            "actual": "cho_duyet; tong_tien=5.487.860 đ; Σ9 dòng=5.487.860 đ",
+            "pass": true
+        },
+        {
+            "id": "SV-06",
+            "rule": "Kế toán không được phê duyệt phát hành",
+            "layer": "BillingService (RBAC)",
+            "input": "Kế toán gọi approveBatch(D, 2026-10)",
+            "expected": "Từ chối",
+            "actual": "LỖI: Chỉ Kế toán trưởng được phê duyệt phát hành hóa đơn.",
+            "pass": true
+        },
+        {
+            "id": "SV-07",
+            "rule": "Kế toán trưởng phê duyệt phát hành và khóa sổ chỉ số",
+            "layer": "BillingService",
+            "input": "KTT phê duyệt lô tháp D kỳ 2026-10",
+            "expected": "HĐ chuyển Chưa thanh toán, chỉ số khóa sổ",
+            "actual": "Phát hành 272 HĐ; chỉ số chưa khóa sổ: 0",
+            "pass": true
+        },
+        {
+            "id": "SV-08",
+            "rule": "Phân tách nhiệm vụ: KTT không duyệt HĐ do chính mình lập",
+            "layer": "BillingService",
+            "input": "Lập HĐ bằng tài khoản KTT rồi tự duyệt",
+            "expected": "Từ chối",
+            "actual": "LỖI: Không có hóa đơn chờ duyệt hợp lệ (hoặc hóa đơn do chính bạn lập).",
+            "pass": true
+        },
+        {
+            "id": "SV-09",
+            "rule": "Hủy hóa đơn: lý do tối thiểu 20 ký tự",
+            "layer": "BillingService",
+            "input": "KTT hủy với lý do \"Sai số\"",
+            "expected": "Từ chối",
+            "actual": "LỖI: Lý do hủy phải dài tối thiểu 20 ký tự.",
+            "pass": true
+        },
+        {
+            "id": "SV-10",
+            "rule": "Hủy hóa đơn mở khóa chỉ số, lập lại HĐ thay thế (-R1)",
+            "layer": "BillingService + TRIGGER",
+            "input": "KTT hủy HD-202610-A0208; Kế toán lập lại",
+            "expected": "HĐ cũ Đã hủy, HĐ mới mã -R1 Chờ duyệt",
+            "actual": "HD-202610-A0208:da_huy, HD-202610-A0208-R1:cho_duyet",
+            "pass": true
+        },
+        {
+            "id": "SV-11",
+            "rule": "Báo cáo công nợ loại trừ HĐ Đã hủy\/Chờ duyệt",
+            "layer": "ReportService",
+            "input": "So sánh công nợ với tổng HĐ chưa thanh toán",
+            "expected": "Bằng nhau, không tính HĐ hủy",
+            "actual": "KPI=2.236.469.226 đ; Σ chưa TT=2.236.469.226 đ; HĐ hủy=1.551.420 đ",
+            "pass": true
+        },
+        {
+            "id": "SV-12",
+            "rule": "Tạo URL thanh toán có chữ ký HMAC SHA512",
+            "layer": "PaymentService",
+            "input": "Cư dân A-1001 thanh toán HD-202610-A1001",
+            "expected": "URL chứa vnp_SecureHash 128 ký tự hex, GD khởi tạo",
+            "actual": "hash=128 ký tự; amount=145716000; GD=khoi_tao",
+            "pass": true
+        },
+        {
+            "id": "SV-13",
+            "rule": "IPN sai chữ ký bị từ chối, đưa vào ngoại lệ",
+            "layer": "PaymentService",
+            "input": "IPN có vnp_SecureHash bị sửa",
+            "expected": "RspCode 97; HĐ chưa thanh toán; GD ngoại lệ",
+            "actual": "RspCode 97; HĐ=chua_thanh_toan; GD=ngoai_le",
+            "pass": true
+        },
+        {
+            "id": "SV-14",
+            "rule": "IPN sai số tiền bị từ chối",
+            "layer": "PaymentService",
+            "input": "IPN vnp_Amount = 100 (đúng chữ ký)",
+            "expected": "RspCode 04",
+            "actual": "RspCode 04",
+            "pass": true
+        },
+        {
+            "id": "SV-15",
+            "rule": "Cư dân hủy giao dịch (mã 24) – hóa đơn giữ nguyên",
+            "layer": "PaymentService",
+            "input": "IPN ResponseCode 24",
+            "expected": "RspCode 00; GD thất bại; HĐ chưa thanh toán",
+            "actual": "RspCode 00; GD=that_bai; HĐ=chua_thanh_toan",
+            "pass": true
+        },
+        {
+            "id": "SV-16",
+            "rule": "IPN hợp lệ: gạch nợ tự động",
+            "layer": "PaymentService + TRIGGER",
+            "input": "IPN ResponseCode 00, đúng chữ ký và số tiền",
+            "expected": "RspCode 00; HĐ đã thanh toán qua VNPay",
+            "actual": "RspCode 00; HĐ=da_thanh_toan\/vnpay",
+            "pass": true
+        },
+        {
+            "id": "SV-17",
+            "rule": "IPN gửi lại (trùng lặp) không gạch nợ 2 lần",
+            "layer": "PaymentService + UNIQUE",
+            "input": "Gửi lại đúng IPN vừa xử lý",
+            "expected": "RspCode 02; vẫn 1 GD thành công",
+            "actual": "RspCode 02; số GD thành công=1",
+            "pass": true
+        },
+        {
+            "id": "SV-18",
+            "rule": "Gạch nợ thủ công: số tiền phải khớp hóa đơn",
+            "layer": "PaymentService",
+            "input": "Kế toán thu 100.000 đ cho HD-202610-A0306",
+            "expected": "Từ chối",
+            "actual": "LỖI: Số tiền thu (100.000 đ) phải bằng tổng tiền hóa đơn (1.352.380 đ).",
+            "pass": true
+        },
+        {
+            "id": "SV-19",
+            "rule": "Gạch nợ thủ công bắt buộc số chứng từ",
+            "layer": "PaymentService + CHECK ck_gd_thu_cong",
+            "input": "Bỏ trống số phiếu thu",
+            "expected": "Từ chối",
+            "actual": "LỖI: Vui lòng nhập số phiếu thu\/biên lai để lưu vết.",
+            "pass": true
+        },
+        {
+            "id": "SV-20",
+            "rule": "Gạch nợ thủ công hợp lệ",
+            "layer": "PaymentService",
+            "input": "Đúng số tiền, có phiếu thu PT-TEST-2",
+            "expected": "HĐ đã thanh toán tiền mặt",
+            "actual": "da_thanh_toan\/tien_mat",
+            "pass": true
+        },
+        {
+            "id": "SV-21",
+            "rule": "IPN đến sau khi đã thu tiền mặt → ngoại lệ đối soát",
+            "layer": "PaymentService + UNIQUE",
+            "input": "IPN thành công cho GD VNPay đang chờ của HĐ vừa thu tiền mặt",
+            "expected": "RspCode 02; GD ngoại lệ; không gạch nợ 2 lần",
+            "actual": "RspCode 02; GD=ngoai_le",
+            "pass": true
+        },
+        {
+            "id": "SV-22",
+            "rule": "Khách thuê chỉ thấy hóa đơn trong thời hạn hợp đồng",
+            "layer": "BillingService",
+            "input": "Khách thuê A-1002 (HĐ từ 2026-06-01) xem HĐ kỳ 2025-11",
+            "expected": "Không thấy; không tạo được thanh toán",
+            "actual": "Kỳ thấy được: 2026-06→2026-10; thanh toán HĐ cũ: Không tìm thấy hóa đơn hoặc hóa đơn ngoài thời hạn hợp đồng thuê.",
+            "pass": true
+        },
+        {
+            "id": "SV-23",
+            "rule": "Đặt tiện ích hợp lệ sinh vé QR",
+            "layer": "BookingService",
+            "input": "A-0201 đặt BBQ 2026-11-08 10:00, 6 người",
+            "expected": "Thành công, mã vé MOONS-BBQ-...",
+            "actual": "Mã vé MOONS-BBQ-A0201-20261108-10-538E",
+            "pass": true
+        },
+        {
+            "id": "SV-24",
+            "rule": "Chống trùng khung giờ (tiện ích độc quyền)",
+            "layer": "BookingService (FOR UPDATE)",
+            "input": "A-0202 đặt cùng BBQ 2026-11-08 10:00",
+            "expected": "Từ chối",
+            "actual": "LỖI: Khung giờ này vừa được đăng ký bởi cư dân khác, vui lòng chọn khung giờ khác.",
+            "pass": true
+        },
+        {
+            "id": "SV-25",
+            "rule": "Đặt đồng thời cùng khung giờ: chỉ 1 giao dịch thành công",
+            "layer": "BookingService (khóa dòng InnoDB)",
+            "input": "2 tiến trình PHP cùng đặt BBQ 14:00, giữ khóa 0,4 giây",
+            "expected": "Đúng 1 OK, 1 bị từ chối; CSDL chỉ có 1 lượt",
+            "actual": "P1: ERR Khung giờ này vừa được đăng ký bởi cư dâ | P2: OK MOONS-BBQ-A0202-20261108-14-83D8 | Số lượt trong CSDL: 1",
+            "pass": true
+        },
+        {
+            "id": "SV-26",
+            "rule": "Hạn mức 2 lượt BBQ\/căn hộ\/tuần",
+            "layer": "BookingService",
+            "input": "A-0201 đặt lượt BBQ thứ 3 trong tuần",
+            "expected": "Lượt thứ 3 bị từ chối",
+            "actual": "LỖI: Căn hộ đã dùng hết hạn mức 2 lượt Khu BBQ ngoài trời trong tuần này.",
+            "pass": true
+        },
+        {
+            "id": "SV-27",
+            "rule": "Vượt sức chứa bị từ chối",
+            "layer": "BookingService",
+            "input": "A-0202 đặt BBQ 45 người (tối đa 40)",
+            "expected": "Từ chối",
+            "actual": "LỖI: Vượt quá sức chứa cho phép (40 người).",
+            "pass": true
+        },
+        {
+            "id": "SV-28",
+            "rule": "Không đặt ngày trong quá khứ",
+            "layer": "BookingService",
+            "input": "Đặt hồ bơi ngày hôm qua",
+            "expected": "Từ chối",
+            "actual": "LỖI: Không được chọn ngày trong quá khứ.",
+            "pass": true
+        },
+        {
+            "id": "SV-29",
+            "rule": "Nợ quá hạn > 30 ngày bị khóa đặt tiện ích độc quyền",
+            "layer": "BookingService",
+            "input": "A-0106 (có HĐ quá hạn) đặt BBQ",
+            "expected": "Từ chối",
+            "actual": "LỖI: Căn hộ có hóa đơn quá hạn trên 30 ngày. Vui lòng thanh toán để mở lại quyền đặt tiện ích.",
+            "pass": true
+        },
+        {
+            "id": "SV-30",
+            "rule": "Căn nợ quá hạn vẫn được dùng tiện ích dùng chung (hồ bơi)",
+            "layer": "BookingService",
+            "input": "A-0106 đặt hồ bơi",
+            "expected": "Thành công",
+            "actual": "Mã vé MOONS-POOL-A0106-20261108-08-158A",
+            "pass": true
+        },
+        {
+            "id": "SV-31",
+            "rule": "Hủy muộn (< 2 giờ) vẫn tính vào hạn mức tuần",
+            "layer": "BookingService",
+            "input": "Đặt BBQ hôm nay khung giờ sắp tới rồi hủy ngay",
+            "expected": "Trạng thái huy_muon",
+            "actual": "huy_muon – Đã hủy. Do hủy trong vòng 2 giờ trước giờ sử dụng, lượt này vẫn được tính vào hạn mức tuần.",
+            "pass": true
+        },
+        {
+            "id": "SV-32",
+            "rule": "Khóa lịch bảo trì tự hủy lịch trùng và chặn đặt mới",
+            "layer": "BookingService",
+            "input": "KTT khóa BBQ 2026-11-08 08:00–22:00",
+            "expected": "Hủy ≥1 lịch; đặt mới bị từ chối",
+            "actual": "Đã hủy 5 lịch; đặt mới: Khung giờ này đang khóa để bảo trì.",
+            "pass": true
+        },
+        {
+            "id": "SV-33",
+            "rule": "Xác thực vé QR: vé không phải hôm nay bị từ chối",
+            "layer": "BookingService",
+            "input": "Lễ tân quét vé của ngày khác",
+            "expected": "Từ chối",
+            "actual": "LỖI: Vé dùng cho ngày 08\/11\/2026, không phải hôm nay.",
+            "pass": true
+        },
+        {
+            "id": "SV-34",
+            "rule": "Định mức xe tính cả hồ sơ chờ duyệt (tối đa 4 xe máy)",
+            "layer": "VehicleService",
+            "input": "A-0203 (2 xe máy) đăng ký thêm 3 xe máy",
+            "expected": "Xe thứ 5 bị từ chối",
+            "actual": "xe 1: OK; xe 2: OK; xe 3: Căn hộ đã đạt định mức tối đa 4 Xe máy.",
+            "pass": true
+        },
+        {
+            "id": "SV-35",
+            "rule": "Biển số sai định dạng bị từ chối",
+            "layer": "VehicleService",
+            "input": "Biển '51G 12345 X'",
+            "expected": "Từ chối",
+            "actual": "LỖI: Biển số không đúng định dạng biển số xe Việt Nam (VD: 51G-102.24, 59X3-343.41).",
+            "pass": true
+        },
+        {
+            "id": "SV-36",
+            "rule": "Phí gửi xe chỉ tính xe đã duyệt",
+            "layer": "BillingService",
+            "input": "Tính dòng phí xe cho A-0203 (2 xe đã duyệt + 2 chờ duyệt)",
+            "expected": "Phí xe máy: 2 xe",
+            "actual": "Phí gửi xe ô tô 1 xe; Phí gửi xe xe máy 2 xe",
+            "pass": true
+        },
+        {
+            "id": "SV-37",
+            "rule": "Kỹ thuật viên chỉ cập nhật phiếu của mình",
+            "layer": "TicketService",
+            "input": "KTV namhv kéo phiếu TK-0007 (của KTV khác)",
+            "expected": "Từ chối",
+            "actual": "LỖI: Bạn chỉ được cập nhật phiếu được phân công cho chính mình.",
+            "pass": true
+        },
+        {
+            "id": "SV-38",
+            "rule": "Không nhảy cóc trạng thái Kanban",
+            "layer": "TicketService",
+            "input": "Chuyển TK-0011 từ Đã phân công sang Hoàn tất",
+            "expected": "Từ chối",
+            "actual": "LỖI: Không thể chuyển từ \"Đã phân công\" sang \"Hoàn tất\".",
+            "pass": true
+        },
+        {
+            "id": "SV-39",
+            "rule": "Đề xuất nghiệm thu bắt buộc ảnh kết quả",
+            "layer": "TicketService + CHECK ck_psc_anh",
+            "input": "KTV chuyển Đang xử lý rồi gửi nghiệm thu không có ảnh",
+            "expected": "Từ chối",
+            "actual": "LỖI: Phải đính kèm ít nhất 01 ảnh nghiệm thu trước khi đề xuất nghiệm thu.",
+            "pass": true
+        },
+        {
+            "id": "SV-40",
+            "rule": "Luồng nghiệm thu 3 bước hoàn chỉnh",
+            "layer": "TicketService",
+            "input": "KTV gửi ảnh → cư dân chấm 5 sao",
+            "expected": "Phiếu Hoàn tất, có điểm và ngày hoàn thành",
+            "actual": "hoan_tat \/ 5 \/ 1",
+            "pass": true
+        },
+        {
+            "id": "SV-41",
+            "rule": "Chỉ Điều phối viên phân công, và chỉ cho kỹ thuật viên",
+            "layer": "TicketService",
+            "input": "Điều phối viên giao TK-0001 cho tài khoản Lễ tân",
+            "expected": "Từ chối",
+            "actual": "LỖI: Kỹ thuật viên không hợp lệ.",
+            "pass": true
+        },
+        {
+            "id": "SV-42",
+            "rule": "Sai mật khẩu 5 lần khóa tạm 15 phút",
+            "layer": "AuthService",
+            "input": "Đăng nhập kế toán sai mật khẩu 5 lần, lần 6 đúng mật khẩu",
+            "expected": "Lần 6 vẫn bị khóa",
+            "actual": "Bạn đã nhập sai 5 lần. Tài khoản tạm khóa, thử lại sau 15 phút.",
+            "pass": true
+        },
+        {
+            "id": "SV-43",
+            "rule": "Hết hạn hợp đồng: thu hồi tài khoản khách thuê",
+            "layer": "AuthService + ResidentService",
+            "input": "Khách thuê 0981230002 (HĐ hết hạn 31\/10\/2026) đăng nhập",
+            "expected": "Từ chối; tài khoản khóa; căn hộ cập nhật trạng thái",
+            "actual": "Hợp đồng thuê đã hết hạn. Tài khoản khách thuê đã được thu hồi. | TK trang_thai=0 | căn hộ: chu_ho_o",
+            "pass": true
+        },
+        {
+            "id": "SV-44",
+            "rule": "Người từ 14 tuổi phải khai báo CCCD",
+            "layer": "ResidentService",
+            "input": "Khai báo thành viên sinh 2000, không CCCD",
+            "expected": "Từ chối",
+            "actual": "LỖI: Người từ 14 tuổi trở lên bắt buộc khai báo số CCCD.",
+            "pass": true
+        },
+        {
+            "id": "SV-45",
+            "rule": "Duyệt khách thuê cấp tài khoản mật khẩu tạm (bắt buộc đổi)",
+            "layer": "ResidentService",
+            "input": "Chủ hộ A-1001 khai báo khách thuê, Lễ tân duyệt",
+            "expected": "Tạo tài khoản khach_thue, phai_doi_mat_khau=1",
+            "actual": "khach_thue\/1; căn hộ: cho_thue",
+            "pass": true
+        },
+        {
+            "id": "SV-46",
+            "rule": "Truy xuất (Retrieval) đúng tài liệu nội quy",
+            "layer": "AiService",
+            "input": "\"Giờ mở cửa hồ bơi?\"",
+            "expected": "Nguồn: Nội quy sử dụng hồ bơi; có \"06:00 đến 22:00\"",
+            "actual": "Hồ bơi mở cửa từ 06:00 đến 22:00 hằng ngày, chia thành các khung giờ 2 tiếng. Sức chứa tối đa 60 người trong một khung giờ. Cư dân đặt lịch trên ứng dụng và xuất trình vé QR tại quầy Lễ tân. [Nguồn: Nội quy sử dụng hồ bơi]",
+            "pass": true
+        },
+        {
+            "id": "SV-47",
+            "rule": "Câu hỏi hóa đơn riêng trả lời từ CSDL, không gửi mô hình AI",
+            "layer": "AiService",
+            "input": "\"Hóa đơn tháng này của tôi\"",
+            "expected": "mode=du_lieu_rieng, đúng số tiền HĐ mới nhất",
+            "actual": "mode=du_lieu_rieng; Hóa đơn tháng 10\/2026 của căn hộ A-1001: 1.457.160 đ (điện 242.160 đ, nước 135.000 đ, phí quản lý 780.000 đ, gửi xe máy 300.000 đ). Trạng thái: đã thanh toán.",
+            "pass": true
+        },
+        {
+            "id": "SV-48",
+            "rule": "Không có ngữ cảnh liên quan thì không bịa câu trả lời",
+            "layer": "AiService",
+            "input": "\"Giá vàng hôm nay?\"",
+            "expected": "Báo chưa có thông tin, đề nghị liên hệ Lễ tân",
+            "actual": "Tôi chưa tìm thấy quy định liên quan trong tài liệu của Ban Quản lý. Bạn vui lòng liên hệ Lễ tân để được hỗ trợ.",
+            "pass": true
+        },
+        {
+            "id": "PQ-01",
+            "rule": "Chưa đăng nhập bị chuyển về trang đăng nhập",
+            "layer": "Middleware Auth::guard",
+            "input": "GET admin\/dashboard (ẩn danh)",
+            "expected": "HTTP 302 → auth\/login",
+            "actual": "HTTP 302 → \/index.php?r=auth%2Flogin",
+            "pass": true
+        },
+        {
+            "id": "PQ-02",
+            "rule": "Cư dân không truy cập phân hệ quản trị",
+            "layer": "Middleware RBAC",
+            "input": "Chủ hộ 0981230001 GET admin\/dashboard",
+            "expected": "HTTP 403",
+            "actual": "HTTP 403",
+            "pass": true
+        },
+        {
+            "id": "PQ-03",
+            "rule": "Lễ tân không truy cập chỉ số & hóa đơn",
+            "layer": "Middleware RBAC",
+            "input": "tantl GET admin\/billing",
+            "expected": "HTTP 403",
+            "actual": "HTTP 403",
+            "pass": true
+        },
+        {
+            "id": "PQ-04",
+            "rule": "Kế toán không được phê duyệt phát hành",
+            "layer": "Middleware RBAC",
+            "input": "toannk POST admin\/invoices-approve",
+            "expected": "HTTP 403",
+            "actual": "HTTP 403",
+            "pass": true
+        },
+        {
+            "id": "PQ-05",
+            "rule": "Kỹ thuật viên không vào Phân quyền & AI",
+            "layer": "Middleware RBAC",
+            "input": "namhv GET admin\/system",
+            "expected": "HTTP 403",
+            "actual": "HTTP 403",
+            "pass": true
+        },
+        {
+            "id": "PQ-06",
+            "rule": "Admin không gạch nợ thủ công (tách biệt tài chính)",
+            "layer": "Middleware RBAC",
+            "input": "trilq POST admin\/payment-manual",
+            "expected": "HTTP 403",
+            "actual": "HTTP 403",
+            "pass": true
+        },
+        {
+            "id": "PQ-07",
+            "rule": "Yêu cầu POST thiếu CSRF token bị chặn",
+            "layer": "Csrf::check",
+            "input": "Chủ hộ POST tickets\/cancel không có _csrf",
+            "expected": "HTTP 419",
+            "actual": "HTTP 419",
+            "pass": true
+        },
+        {
+            "id": "PQ-08",
+            "rule": "IPN công khai nhưng không giả mạo được",
+            "layer": "PaymentService",
+            "input": "GET vnpay\/ipn với chữ ký giả",
+            "expected": "RspCode 97",
+            "actual": "{\"RspCode\":\"97\",\"Message\":\"Invalid signature\"}",
+            "pass": true
+        }
+    ],
+    "consistency": [
+        {
+            "check": "Hóa đơn có tong_tien ≠ Σ chi tiết",
+            "rows": 0,
+            "sql": "SELECT COUNT(*) FROM hoa_don h WHERE tong_tien <> (SELECT COALESCE(SUM(thanh_tien),0) FROM chi_tiet_hoa_don c WHERE c.ID_hoa_don=h.ID_hoa_don)"
+        },
+        {
+            "check": "Hóa đơn đã thanh toán không có GD thành công khớp tiền",
+            "rows": 0,
+            "sql": "SELECT COUNT(*) FROM hoa_don h WHERE trang_thai_thanh_toan='da_thanh_toan' AND NOT EXISTS (SELECT 1 FROM giao_dich_thanh_toan g WHERE g.ID_hoa_don=h.ID_hoa_don AND g.trang_thai='thanh_cong' AND g.so_tien=h.tong_tien)"
+        },
+        {
+            "check": "GD thành công nhưng hóa đơn chưa thanh toán",
+            "rows": 0,
+            "sql": "SELECT COUNT(*) FROM giao_dich_thanh_toan g JOIN hoa_don h USING(ID_hoa_don) WHERE g.trang_thai='thanh_cong' AND h.trang_thai_thanh_toan<>'da_thanh_toan'"
+        },
+        {
+            "check": "Căn hộ vượt định mức xe",
+            "rows": 0,
+            "sql": "SELECT COUNT(*) FROM (SELECT ID_can_ho FROM the_xe WHERE trang_thai_duyet IN ('cho_duyet','yeu_cau_bo_sung','da_duyet') GROUP BY ID_can_ho HAVING SUM(loai_xe='o_to')>2 OR SUM(loai_xe='xe_may')>4) x"
+        },
+        {
+            "check": "Lịch tiện ích độc quyền chồng giờ",
+            "rows": 0,
+            "sql": "SELECT COUNT(*) FROM dat_tien_ich a JOIN dat_tien_ich b ON a.ID_tien_ich=b.ID_tien_ich AND a.ngay_dat=b.ngay_dat AND a.ID_dat_lich<b.ID_dat_lich JOIN dich_vu_tien_ich t ON t.ID_tien_ich=a.ID_tien_ich WHERE t.doc_quyen=1 AND a.trang_thai_dat IN ('da_xac_nhan','da_su_dung') AND b.trang_thai_dat IN ('da_xac_nhan','da_su_dung') AND a.khung_gio_bat_dau<b.khung_gio_ket_thuc AND a.khung_gio_ket_thuc>b.khung_gio_bat_dau"
+        },
+        {
+            "check": "Chỉ số không nối tiếp kỳ trước",
+            "rows": 0,
+            "sql": "SELECT COUNT(*) FROM chi_so_dien_nuoc c JOIN chi_so_dien_nuoc p ON p.ID_can_ho=c.ID_can_ho AND p.ky_cuoc=DATE_FORMAT(STR_TO_DATE(CONCAT(c.ky_cuoc,'-01'),'%Y-%m-%d') - INTERVAL 1 MONTH,'%Y-%m') WHERE c.chi_so_dien_cu<>p.chi_so_dien_moi OR c.chi_so_nuoc_cu<>p.chi_so_nuoc_moi"
+        },
+        {
+            "check": "Hóa đơn đã phát hành nhưng chỉ số chưa khóa sổ",
+            "rows": 0,
+            "sql": "SELECT COUNT(*) FROM hoa_don h JOIN chi_so_dien_nuoc c ON c.ID_can_ho=h.ID_can_ho AND c.ky_cuoc=h.ky_cuoc WHERE h.trang_thai_thanh_toan IN ('chua_thanh_toan','da_thanh_toan') AND c.da_khoa_so=0"
+        },
+        {
+            "check": "Phiếu sự cố hoàn tất thiếu ảnh nghiệm thu",
+            "rows": 0,
+            "sql": "SELECT COUNT(*) FROM phieu_su_co WHERE trang_thai_kanban IN ('cho_nghiem_thu','hoan_tat') AND anh_nghiem_thu IS NULL"
+        }
+    ]
+}

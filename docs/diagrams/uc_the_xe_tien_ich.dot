@@ -1,0 +1,26 @@
+digraph G { rankdir=LR; fontname="DejaVu Sans"; node[fontname="DejaVu Sans",fontsize=10]; edge[arrowhead=none,color="#555555"]; ranksep=1.1;
+cd[shape=none,label="☺\nCư dân",fontsize=11,image=""];
+lt[shape=none,label="☺\nLễ tân",fontsize=11,image=""];
+ktt[shape=none,label="☺\nKế toán trưởng / Admin",fontsize=11,image=""];
+subgraph cluster_sys {label="Phân hệ thẻ xe, thẻ từ & tiện ích";style=rounded;color="#5F7B6F";fontname="DejaVu Sans";
+a[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-RES03 Xem thẻ & báo mất"];
+b[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-RES04 Đăng ký thẻ xe"];
+c[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-REC03 Duyệt thẻ xe"];
+d[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-REC02 Cấp / khóa thẻ RFID, vân tay"];
+e[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-RES07 Đặt tiện ích"];
+f[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="Hủy lịch"];
+g[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-REC04 Xác thực vé QR"];
+h[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-KTT03 Khóa lịch bảo trì"];
+i[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="Kiểm tra định mức xe"];
+}
+cd->a;
+cd->b;
+cd->e;
+cd->f;
+c->lt;
+d->lt;
+g->lt;
+h->ktt;
+b->i[style=dashed,arrowhead=vee,label="«include»",fontsize=8,fontname="DejaVu Sans"];
+c->i[style=dashed,arrowhead=vee,label="«include»",fontsize=8,fontname="DejaVu Sans"];
+}

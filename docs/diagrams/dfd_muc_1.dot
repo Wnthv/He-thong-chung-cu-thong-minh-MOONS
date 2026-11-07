@@ -1,0 +1,14 @@
+digraph G { rankdir=TB; fontname="DejaVu Sans"; node[fontname="DejaVu Sans",fontsize=10]; edge[fontname="DejaVu Sans",fontsize=8,color="#555555",arrowsize=0.6]; ranksep=0.7; nodesep=0.35;
+node[shape=box,style=filled,fillcolor="#E2E8F0",color="#4A5568"]; CD[label="Cư dân"]; LT[label="Lễ tân"]; KE[label="Kế toán"]; KTT[label="Kế toán trưởng"]; DPV[label="Điều phối viên"]; KTV[label="Kỹ thuật viên"]; AD[label="Admin"]; VN[label="VNPay"];
+node[shape=circle,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",fixedsize=true,width=1.35];
+P1[label="1.0\nQuản lý\nnhân khẩu"]; P2[label="2.0\nThẻ xe &\nthẻ ra vào"]; P3[label="3.0\nChỉ số &\nhóa đơn"]; P4[label="4.0\nThanh toán &\nđối soát"]; P5[label="5.0\nĐặt\ntiện ích"]; P6[label="6.0\nXử lý\nsự cố"]; P7[label="7.0\nTrợ lý AI"];
+node[shape=record,style=filled,fillcolor="#FFF7E6",color="#B7791F",fixedsize=false,width=0];
+D1[label="D1|nhan_khau, can_ho"]; D2[label="D2|the_xe, the_ra_vao"]; D3[label="D3|chi_so_dien_nuoc, bieu_phi"]; D4[label="D4|hoa_don, chi_tiet_hoa_don"]; D5[label="D5|giao_dich_thanh_toan"]; D6[label="D6|dich_vu_tien_ich, dat_tien_ich"]; D7[label="D7|phieu_su_co"]; D8[label="D8|ngu_canh_ai"];
+CD->P1[label="khai báo"]; P1->LT[label="hồ sơ chờ duyệt"]; LT->P1[label="kết quả duyệt"]; P1->D1;
+CD->P2[label="đăng ký xe"]; LT->P2[label="duyệt, mã RFID"]; P2->D2; D1->P2;
+KE->P3[label="chỉ số"]; KTT->P3[label="phê duyệt/hủy"]; D3->P3; D2->P3[label="xe đã duyệt"]; P3->D4; P3->D3[label="khóa sổ"];
+CD->P4[label="yêu cầu TT"]; P4->VN[label="URL ký"]; VN->P4[label="IPN"]; KE->P4[label="phiếu thu"]; D4->P4; P4->D5; P4->D4[label="gạch nợ"];
+CD->P5[label="đặt lịch"]; D4->P5[label="nợ quá hạn"]; P5->D6; LT->P5[label="mã vé QR"]; KTT->P5[label="khóa bảo trì"]; AD->P5[label="khóa bảo trì"];
+CD->P6[label="phiếu + ảnh"]; DPV->P6[label="phân công"]; KTV->P6[label="tiến độ, ảnh"]; P6->D7; P6->CD[label="tiến độ"];
+CD->P7[label="câu hỏi"]; D8->P7[label="đoạn liên quan"]; D4->P7[label="HĐ của chính cư dân"]; AD->P7[label="tài liệu"]; P7->CD[label="trả lời"];
+}

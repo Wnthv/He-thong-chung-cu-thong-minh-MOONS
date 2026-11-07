@@ -1,0 +1,35 @@
+digraph G { rankdir=LR; fontname="DejaVu Sans"; node[fontname="DejaVu Sans",fontsize=10]; edge[arrowhead=none,color="#555555"]; ranksep=1.1;
+ch[shape=none,label="☺\nChủ hộ",fontsize=11,image=""];
+kt[shape=none,label="☺\nKhách thuê",fontsize=11,image=""];
+ke[shape=none,label="☺\nKế toán",fontsize=11,image=""];
+ktt[shape=none,label="☺\nKế toán trưởng",fontsize=11,image=""];
+vn[shape=none,label="☺\n«system»\nVNPay",fontsize=11,image=""];
+subgraph cluster_sys {label="Phân hệ tài chính & thanh toán";style=rounded;color="#5F7B6F";fontname="DejaVu Sans";
+a[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-RES05 Tra cứu hóa đơn"];
+b[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-RES06 Thanh toán VNPay"];
+c[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-ACC01 Nhập chỉ số"];
+d[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-ACC02 Lập hóa đơn"];
+e[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-KTT01 Phê duyệt phát hành"];
+f[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-KTT01 Hủy hóa đơn"];
+g[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-KTT02 Cập nhật biểu phí"];
+h[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-ACC03 Gạch nợ thủ công"];
+i[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-ACC04 Đối soát IPN"];
+j[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-ACC05 Báo cáo công nợ"];
+k[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="Lọc theo hạn hợp đồng"];
+}
+ch->a;
+kt->a;
+ch->b;
+kt->b;
+b->vn;
+c->ke;
+d->ke;
+h->ke;
+i->ke;
+j->ke;
+e->ktt;
+f->ktt;
+g->ktt;
+k->a[style=dashed,arrowhead=vee,label="«extend»",fontsize=8,fontname="DejaVu Sans"];
+d->c[style=dashed,arrowhead=vee,label="«include»",fontsize=8,fontname="DejaVu Sans"];
+}

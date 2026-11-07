@@ -1,0 +1,75 @@
+name: CI – Kiểm thử tự động Moons
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cài PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql, gd, intl, curl, mbstring
+          coverage: none
+
+      - name: Kiểm tra cú pháp PHP
+        run: find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l > /dev/null
+
+      - name: Tạo config.local.php cho CI
+        run: |
+          cat > config/config.local.php <<'PHP'
+          <?php
+          return [
+              'db' => ['host' => '127.0.0.1', 'port' => 3306, 'user' => 'root', 'pass' => 'root'],
+              'fixed_today' => '2026-11-04',   // ngày của bộ dữ liệu trong báo cáo
+          ];
+          PHP
+
+      - name: Tạo CSDL & import schema
+        run: |
+          mysql -h127.0.0.1 -uroot -proot -e "CREATE DATABASE moons CHARACTER SET utf8mb4"
+          mysql -h127.0.0.1 -uroot -proot moons < database/schema.sql
+
+      - name: Sinh dữ liệu mô phỏng
+        run: php database/seed.php
+
+      - name: Sao chép sang CSDL kiểm thử moons_test
+        run: |
+          mysqldump -h127.0.0.1 -uroot -proot --routines --triggers moons > seed.sql
+          mysql -h127.0.0.1 -uroot -proot -e "CREATE DATABASE moons_test CHARACTER SET utf8mb4"
+          mysql -h127.0.0.1 -uroot -proot moons_test < seed.sql
+
+      - name: Khởi động máy chủ PHP
+        run: |
+          cd public
+          MOONS_DB=moons_test nohup php -S 127.0.0.1:8080 > ../php-server.log 2>&1 &
+          sleep 2
+
+      - name: Chạy 75 ca kiểm thử
+        run: MOONS_DB=moons_test php tests/run_tests.php --http=http://127.0.0.1:8080/index.php
+
+      - name: Lưu kết quả kiểm thử
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ket-qua-kiem-thu
+          path: |
+            tests/results.json
+            php-server.log

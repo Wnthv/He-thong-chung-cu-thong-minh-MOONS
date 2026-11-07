@@ -1,0 +1,23 @@
+digraph G { rankdir=LR; fontname="DejaVu Sans"; node[fontname="DejaVu Sans",fontsize=10]; edge[arrowhead=none,color="#555555"]; ranksep=1.1;
+ch[shape=none,label="☺\nChủ hộ",fontsize=11,image=""];
+kt[shape=none,label="☺\nKhách thuê",fontsize=11,image=""];
+lt[shape=none,label="☺\nLễ tân",fontsize=11,image=""];
+subgraph cluster_sys {label="Phân hệ căn hộ & nhân khẩu";style=rounded;color="#5F7B6F";fontname="DejaVu Sans";
+a[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-RES01 Xem thông tin căn hộ"];
+b[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-RES02 Khai báo thành viên"];
+c[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="Khai báo khách thuê"];
+d[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-REC01 Tra cứu sơ đồ căn hộ"];
+e[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-REC01 Duyệt / từ chối nhân khẩu"];
+f[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="Cấp tài khoản khách thuê"];
+g[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="Báo thành viên chuyển đi"];
+}
+ch->a;
+kt->a;
+ch->b;
+kt->b;
+ch->c;
+ch->g;
+d->lt;
+e->lt;
+f->e[style=dashed,arrowhead=vee,label="«extend»",fontsize=8,fontname="DejaVu Sans"];
+}

@@ -1,0 +1,11 @@
+digraph G { rankdir=LR; fontname="DejaVu Sans"; node[fontname="DejaVu Sans",fontsize=11,shape=box,style="rounded,filled",fillcolor="#F2F6F3",color="#5F7B6F"]; edge[fontname="DejaVu Sans",fontsize=9,color="#555555"];
+subgraph cluster_c {label="Client (trình duyệt)";style="rounded,dashed";color="#999999";fontname="DejaVu Sans";
+ m[label="Mobile Web – Cư dân\n(Chủ hộ, Khách thuê)"]; d[label="Desktop Web – Ban Quản lý\n(Lễ tân, Kế toán, KTT, ĐPV, KTV, Admin)"];}
+subgraph cluster_s {label="Máy chủ Web – PHP 8 (Apache/WAMP)";style="rounded";color="#5F7B6F";fontname="DejaVu Sans";
+ fc[label="Front Controller\npublic/index.php\n(Router + RBAC + CSRF)",fillcolor="#E7EEEA"];
+ c[label="Controllers\nAuth, Resident, Payment, Admin"]; s[label="Services (nghiệp vụ)\nBilling, Payment, Booking, Vehicle,\nResident, Ticket, AI, Report, Audit"];
+ v[label="Views (PHP template)\nlayouts/resident, layouts/admin"]; fc->c; c->s; c->v; }
+db[label="MySQL 8 / MariaDB\n15 bảng InnoDB\nCHECK · UNIQUE · FK · 16 TRIGGER",shape=cylinder,fillcolor="#FFF7E6",color="#B7791F"];
+vn[label="Cổng VNPay\n(HMAC SHA512, IPN)",fillcolor="#E6F0FA",color="#005BAA"]; gm[label="Google Gemini API\n(tùy chọn)",fillcolor="#E6F0FA",color="#005BAA"];
+m->fc[label="HTTPS"]; d->fc[label="HTTPS"]; s->db[label="PDO\nprepared statement"]; s->vn[label="URL thanh toán"]; vn->fc[label="IPN / ReturnUrl"]; s->gm[label="ngữ cảnh RAG"];
+}

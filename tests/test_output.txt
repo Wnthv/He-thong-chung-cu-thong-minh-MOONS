@@ -1,0 +1,163 @@
+=== CSDL kiểm thử: moons_test · ngày 2026-11-05 ===
+DB-01  ĐẠT tong_tien luôn bằng tổng thành tiền chi tiết
+       → tong_tien sau UPDATE = 2.902.150 đ (ban đầu 2.902.150 đ)
+DB-02  ĐẠT Không sửa chi tiết của hóa đơn đã phát hành
+       → LỖI: Hóa đơn đã phát hành, không được sửa chi tiết. Hãy hủy và lập hóa đơn thay thế.
+DB-03  ĐẠT Không gạch nợ trực tiếp khi chưa có giao dịch thành công
+       → LỖI: Không thể gạch nợ khi chưa có giao dịch thành công khớp số tiền.
+DB-04  ĐẠT Giao dịch thành công phải khớp số tiền hóa đơn
+       → LỖI: Giao dịch thành công phải khớp số tiền của hóa đơn đang chưa thanh toán (hóa đơn có thể đã được thanh toán bằng hình thức khác).
+DB-05  ĐẠT Mỗi hóa đơn tối đa 1 giao dịch thành công
+       → LỖI: Giao dịch thành công phải khớp số tiền của hóa đơn đang chưa thanh toán (hóa đơn có thể đã được thanh toán bằng hình thức khác).
+DB-06  ĐẠT Mỗi căn hộ 1 hóa đơn còn hiệu lực/kỳ
+       → LỖI: Căn hộ đã có hóa đơn còn hiệu lực trong kỳ này.
+DB-07  ĐẠT Hóa đơn chỉ được hủy, không được xóa
+       → LỖI: Hóa đơn chỉ được hủy, không được xóa.
+DB-08  ĐẠT Không xóa căn hộ còn dữ liệu liên quan (truy vết)
+       → LỖI: Dữ liệu không hợp lệ: SQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails 
+DB-09  ĐẠT Chỉ số đã khóa sổ không được sửa
+       → LỖI: Chỉ số kỳ này đã khóa sổ sau khi phát hành hóa đơn.
+DB-10  ĐẠT Chỉ số mới ≥ chỉ số cũ
+       → LỖI: Chỉ số điện mới phải lớn hơn hoặc bằng chỉ số cũ.
+DB-11  ĐẠT Thành tiền = số lượng × đơn giá
+       → LỖI: Dữ liệu không hợp lệ: SQLSTATE[23000]: Integrity constraint violation: 4025 CONSTRAINT `ck_cthd_tt` failed for `moons_test`.`chi_tiet_hoa_don`
+DB-12  ĐẠT Biển số không trùng giữa các hồ sơ còn hiệu lực
+       → LỖI: Biển số xe này đã được đăng ký trên hệ thống.
+DB-13  ĐẠT Biển số của hồ sơ đã hủy được đăng ký lại
+       → Câu lệnh thực thi thành công
+DB-14  ĐẠT Biển số đúng định dạng Việt Nam
+       → LỖI: Biển số không đúng định dạng biển số xe Việt Nam (VD: 51G-102.24, 59X3-343.41).
+DB-15  ĐẠT Phải có ảnh nghiệm thu trước khi chờ nghiệm thu/hoàn tất
+       → LỖI: Phải đính kèm ít nhất 01 ảnh nghiệm thu trước khi đề xuất nghiệm thu.
+DB-16  ĐẠT Khách thuê phải có hợp đồng hợp lệ
+       → LỖI: Khách thuê phải có số hợp đồng, ngày bắt đầu và ngày kết thúc hợp lệ.
+DB-17  ĐẠT Giao dịch đã kết thúc là bất biến
+       → LỖI: Giao dịch đã kết thúc, không được sửa.
+DB-18  ĐẠT Nhật ký thao tác chỉ ghi thêm
+       → LỖI: Dữ liệu không hợp lệ: SQLSTATE[45000]: <<Unknown error>>: 1644 NK_CHI_GHI_THEM: nhat ky khong duoc xoa
+DB-19  ĐẠT Chỉ chuyển trạng thái hóa đơn hợp lệ
+       → LỖI: Hóa đơn đã thanh toán, không thể thay đổi trạng thái.
+SV-01  ĐẠT Tính tiền điện 6 bậc (mỗi bậc 1 dòng)
+       → 50×1.984 + 50×2.050 + 17×2.380 = 242.160 đ
+SV-02  ĐẠT Lưu chỉ số: chỉ số mới nhỏ hơn cũ bị từ chối theo từng dòng
+       → saved=0; lỗi: D-0101: Chỉ số điện mới (1) nhỏ hơn chỉ số cũ (5055).
+SV-03  ĐẠT Tiêu thụ > 3 lần TB 3 kỳ phải có ghi chú xác minh
+       → Lập 271 HĐ; bỏ qua: D-1005: tiêu thụ bất thường chưa có ghi chú xác minh | D-1203: tiêu thụ bất thường chưa có ghi chú xác minh
+SV-04  ĐẠT Ghi chú xác minh hợp lệ thì được lập hóa đơn
+       → Lập 1 HĐ
+SV-05  ĐẠT Hóa đơn mới lập ở trạng thái Chờ duyệt, tổng = Σ chi tiết
+       → cho_duyet; tong_tien=5.487.860 đ; Σ9 dòng=5.487.860 đ
+SV-06  ĐẠT Kế toán không được phê duyệt phát hành
+       → LỖI: Chỉ Kế toán trưởng được phê duyệt phát hành hóa đơn.
+SV-07  ĐẠT Kế toán trưởng phê duyệt phát hành và khóa sổ chỉ số
+       → Phát hành 272 HĐ; chỉ số chưa khóa sổ: 0
+SV-08  ĐẠT Phân tách nhiệm vụ: KTT không duyệt HĐ do chính mình lập
+       → LỖI: Không có hóa đơn chờ duyệt hợp lệ (hoặc hóa đơn do chính bạn lập).
+SV-09  ĐẠT Hủy hóa đơn: lý do tối thiểu 20 ký tự
+       → LỖI: Lý do hủy phải dài tối thiểu 20 ký tự.
+SV-10  ĐẠT Hủy hóa đơn mở khóa chỉ số, lập lại HĐ thay thế (-R1)
+       → HD-202610-A0208:da_huy, HD-202610-A0208-R1:cho_duyet
+SV-11  ĐẠT Báo cáo công nợ loại trừ HĐ Đã hủy/Chờ duyệt
+       → KPI=2.236.469.226 đ; Σ chưa TT=2.236.469.226 đ; HĐ hủy=1.551.420 đ
+SV-12  ĐẠT Tạo URL thanh toán có chữ ký HMAC SHA512
+       → hash=128 ký tự; amount=145716000; GD=khoi_tao
+SV-13  ĐẠT IPN sai chữ ký bị từ chối, đưa vào ngoại lệ
+       → RspCode 97; HĐ=chua_thanh_toan; GD=ngoai_le
+SV-14  ĐẠT IPN sai số tiền bị từ chối
+       → RspCode 04
+SV-15  ĐẠT Cư dân hủy giao dịch (mã 24) – hóa đơn giữ nguyên
+       → RspCode 00; GD=that_bai; HĐ=chua_thanh_toan
+SV-16  ĐẠT IPN hợp lệ: gạch nợ tự động
+       → RspCode 00; HĐ=da_thanh_toan/vnpay
+SV-17  ĐẠT IPN gửi lại (trùng lặp) không gạch nợ 2 lần
+       → RspCode 02; số GD thành công=1
+SV-18  ĐẠT Gạch nợ thủ công: số tiền phải khớp hóa đơn
+       → LỖI: Số tiền thu (100.000 đ) phải bằng tổng tiền hóa đơn (1.352.380 đ).
+SV-19  ĐẠT Gạch nợ thủ công bắt buộc số chứng từ
+       → LỖI: Vui lòng nhập số phiếu thu/biên lai để lưu vết.
+SV-20  ĐẠT Gạch nợ thủ công hợp lệ
+       → da_thanh_toan/tien_mat
+SV-21  ĐẠT IPN đến sau khi đã thu tiền mặt → ngoại lệ đối soát
+       → RspCode 02; GD=ngoai_le
+SV-22  ĐẠT Khách thuê chỉ thấy hóa đơn trong thời hạn hợp đồng
+       → Kỳ thấy được: 2026-06→2026-10; thanh toán HĐ cũ: Không tìm thấy hóa đơn hoặc hóa đơn ngoài thời hạn hợp đồng thuê.
+SV-23  ĐẠT Đặt tiện ích hợp lệ sinh vé QR
+       → Mã vé MOONS-BBQ-A0201-20261108-10-538E
+SV-24  ĐẠT Chống trùng khung giờ (tiện ích độc quyền)
+       → LỖI: Khung giờ này vừa được đăng ký bởi cư dân khác, vui lòng chọn khung giờ khác.
+SV-25  ĐẠT Đặt đồng thời cùng khung giờ: chỉ 1 giao dịch thành công
+       → P1: ERR Khung giờ này vừa được đăng ký bởi cư dâ | P2: OK MOONS-BBQ-A0202-20261108-14-83D8 | Số lượt trong CSDL: 1
+SV-26  ĐẠT Hạn mức 2 lượt BBQ/căn hộ/tuần
+       → LỖI: Căn hộ đã dùng hết hạn mức 2 lượt Khu BBQ ngoài trời trong tuần này.
+SV-27  ĐẠT Vượt sức chứa bị từ chối
+       → LỖI: Vượt quá sức chứa cho phép (40 người).
+SV-28  ĐẠT Không đặt ngày trong quá khứ
+       → LỖI: Không được chọn ngày trong quá khứ.
+SV-29  ĐẠT Nợ quá hạn > 30 ngày bị khóa đặt tiện ích độc quyền
+       → LỖI: Căn hộ có hóa đơn quá hạn trên 30 ngày. Vui lòng thanh toán để mở lại quyền đặt tiện ích.
+SV-30  ĐẠT Căn nợ quá hạn vẫn được dùng tiện ích dùng chung (hồ bơi)
+       → Mã vé MOONS-POOL-A0106-20261108-08-158A
+SV-31  ĐẠT Hủy muộn (< 2 giờ) vẫn tính vào hạn mức tuần
+       → huy_muon – Đã hủy. Do hủy trong vòng 2 giờ trước giờ sử dụng, lượt này vẫn được tính vào hạn mức tuần.
+SV-32  ĐẠT Khóa lịch bảo trì tự hủy lịch trùng và chặn đặt mới
+       → Đã hủy 5 lịch; đặt mới: Khung giờ này đang khóa để bảo trì.
+SV-33  ĐẠT Xác thực vé QR: vé không phải hôm nay bị từ chối
+       → LỖI: Vé dùng cho ngày 08/11/2026, không phải hôm nay.
+SV-34  ĐẠT Định mức xe tính cả hồ sơ chờ duyệt (tối đa 4 xe máy)
+       → xe 1: OK; xe 2: OK; xe 3: Căn hộ đã đạt định mức tối đa 4 Xe máy.
+SV-35  ĐẠT Biển số sai định dạng bị từ chối
+       → LỖI: Biển số không đúng định dạng biển số xe Việt Nam (VD: 51G-102.24, 59X3-343.41).
+SV-36  ĐẠT Phí gửi xe chỉ tính xe đã duyệt
+       → Phí gửi xe ô tô 1 xe; Phí gửi xe xe máy 2 xe
+SV-37  ĐẠT Kỹ thuật viên chỉ cập nhật phiếu của mình
+       → LỖI: Bạn chỉ được cập nhật phiếu được phân công cho chính mình.
+SV-38  ĐẠT Không nhảy cóc trạng thái Kanban
+       → LỖI: Không thể chuyển từ "Đã phân công" sang "Hoàn tất".
+SV-39  ĐẠT Đề xuất nghiệm thu bắt buộc ảnh kết quả
+       → LỖI: Phải đính kèm ít nhất 01 ảnh nghiệm thu trước khi đề xuất nghiệm thu.
+SV-40  ĐẠT Luồng nghiệm thu 3 bước hoàn chỉnh
+       → hoan_tat / 5 / 1
+SV-41  ĐẠT Chỉ Điều phối viên phân công, và chỉ cho kỹ thuật viên
+       → LỖI: Kỹ thuật viên không hợp lệ.
+SV-42  ĐẠT Sai mật khẩu 5 lần khóa tạm 15 phút
+       → Bạn đã nhập sai 5 lần. Tài khoản tạm khóa, thử lại sau 15 phút.
+SV-43  ĐẠT Hết hạn hợp đồng: thu hồi tài khoản khách thuê
+       → Hợp đồng thuê đã hết hạn. Tài khoản khách thuê đã được thu hồi. | TK trang_thai=0 | căn hộ: chu_ho_o
+SV-44  ĐẠT Người từ 14 tuổi phải khai báo CCCD
+       → LỖI: Người từ 14 tuổi trở lên bắt buộc khai báo số CCCD.
+SV-45  ĐẠT Duyệt khách thuê cấp tài khoản mật khẩu tạm (bắt buộc đổi)
+       → khach_thue/1; căn hộ: cho_thue
+SV-46  ĐẠT Truy xuất (Retrieval) đúng tài liệu nội quy
+       → Hồ bơi mở cửa từ 06:00 đến 22:00 hằng ngày, chia thành các khung giờ 2 tiếng. Sức chứa tối đa 60 người trong một khung giờ. Cư dân đặt lịch trên ứng d
+SV-47  ĐẠT Câu hỏi hóa đơn riêng trả lời từ CSDL, không gửi mô hình AI
+       → mode=du_lieu_rieng; Hóa đơn tháng 10/2026 của căn hộ A-1001: 1.457.160 đ (điện 242.160 đ, nước 135.000 đ, phí quản lý 780.000 đ, gửi xe máy 300.000 đ)
+SV-48  ĐẠT Không có ngữ cảnh liên quan thì không bịa câu trả lời
+       → Tôi chưa tìm thấy quy định liên quan trong tài liệu của Ban Quản lý. Bạn vui lòng liên hệ Lễ tân để được hỗ trợ.
+PQ-01  ĐẠT Chưa đăng nhập bị chuyển về trang đăng nhập
+       → HTTP 302 → /index.php?r=auth%2Flogin
+PQ-02  ĐẠT Cư dân không truy cập phân hệ quản trị
+       → HTTP 403
+PQ-03  ĐẠT Lễ tân không truy cập chỉ số & hóa đơn
+       → HTTP 403
+PQ-04  ĐẠT Kế toán không được phê duyệt phát hành
+       → HTTP 403
+PQ-05  ĐẠT Kỹ thuật viên không vào Phân quyền & AI
+       → HTTP 403
+PQ-06  ĐẠT Admin không gạch nợ thủ công (tách biệt tài chính)
+       → HTTP 403
+PQ-07  ĐẠT Yêu cầu POST thiếu CSRF token bị chặn
+       → HTTP 419
+PQ-08  ĐẠT IPN công khai nhưng không giả mạo được
+       → {"RspCode":"97","Message":"Invalid signature"}
+
+=== Truy vấn kiểm tra tính nhất quán dữ liệu ===
+Hóa đơn có tong_tien ≠ Σ chi tiết                   0
+Hóa đơn đã thanh toán không có GD thành công khớp tiền 0
+GD thành công nhưng hóa đơn chưa thanh toán          0
+Căn hộ vượt định mức xe                           0
+Lịch tiện ích độc quyền chồng giờ              0
+Chỉ số không nối tiếp kỳ trước                 0
+Hóa đơn đã phát hành nhưng chỉ số chưa khóa sổ 0
+Phiếu sự cố hoàn tất thiếu ảnh nghiệm thu     0
+
+TỔNG: 75/75 ca đạt

@@ -1,0 +1,26 @@
+digraph G { rankdir=LR; fontname="DejaVu Sans"; node[fontname="DejaVu Sans",fontsize=10]; edge[arrowhead=none,color="#555555"]; ranksep=1.1;
+cd[shape=none,label="☺\nCư dân",fontsize=11,image=""];
+dp[shape=none,label="☺\nĐiều phối viên",fontsize=11,image=""];
+ktv[shape=none,label="☺\nKỹ thuật viên",fontsize=11,image=""];
+gm[shape=none,label="☺\n«system»\nGemini",fontsize=11,image=""];
+ad[shape=none,label="☺\nAdmin",fontsize=11,image=""];
+subgraph cluster_sys {label="Phân hệ sự cố & trợ lý AI";style=rounded;color="#5F7B6F";fontname="DejaVu Sans";
+a[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-RES08 Gửi phiếu báo hỏng"];
+b[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="Theo dõi tiến độ"];
+c[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="Nghiệm thu / yêu cầu sửa lại"];
+d[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-DPV01 Phân công / từ chối"];
+e[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-TEC01 Cập nhật Kanban"];
+f[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-TEC02 Gửi nghiệm thu kèm ảnh"];
+g[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-RES09 Hỏi đáp Trợ lý AI"];
+h[shape=ellipse,style=filled,fillcolor="#F2F6F3",color="#5F7B6F",label="UC-ADM02 Quản lý ngữ cảnh AI"];
+}
+cd->a;
+cd->b;
+cd->c;
+cd->g;
+d->dp;
+e->ktv;
+f->ktv;
+g->gm;
+h->ad;
+}

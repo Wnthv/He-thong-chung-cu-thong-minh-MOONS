@@ -1,0 +1,29 @@
+digraph G { rankdir=LR; compound=true; newrank=true; fontname="DejaVu Sans"; label="TO-BE: Đặt tiện ích nội khu"; labelloc=t; fontsize=13; nodesep=0.35; ranksep=0.35;
+node[fontname="DejaVu Sans",fontsize=10]; edge[fontname="DejaVu Sans",fontsize=9,color="#444444",arrowsize=0.7];
+subgraph cluster_0 { label="Cư dân"; labeljust=l; style=filled; fillcolor="#EEF3F0"; color="#99AAAA";
+s[shape=circle,label="",width=0.3,style=filled,fillcolor="#C6F6D5",color="#2F855A"];
+a1[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Chọn tiện ích,\nngày, khung giờ"];
+a2[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Nhận vé QR"];
+a3[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Xuất trình vé"];
+e[shape=doublecircle,label="",width=0.25,style=filled,fillcolor="#FED7D7",color="#C53030"];
+}
+subgraph cluster_1 { label="Hệ thống"; labeljust=l; style=filled; fillcolor="#F7F8F6"; color="#99AAAA";
+h0[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="SELECT … FOR UPDATE\n(khóa dòng tiện ích)"];
+h1[shape=diamond,label="Nợ >30 ngày? Hạn mức tuần?\nSức chứa? Trùng giờ?",style=filled,fillcolor="#FEFCBF",color="#B7791F",fontsize=9,width=0.6,height=0.6];
+h2[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Hoàn tác, báo lý do"];
+h3[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Lưu lịch, sinh mã vé"];
+}
+subgraph cluster_2 { label="Lễ tân"; labeljust=l; style=filled; fillcolor="#EEF3F0"; color="#99AAAA";
+b1[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Quét QR, ghi nhận\nĐã sử dụng"];
+}
+s->a1[label=""];
+a1->h0[label=""];
+h0->h1[label=""];
+h1->h2[label="Vi phạm"];
+h2->a1[label=""];
+h1->h3[label="Hợp lệ"];
+h3->a2[label=""];
+a2->a3[label=""];
+a3->b1[label=""];
+b1->e[label=""];
+}

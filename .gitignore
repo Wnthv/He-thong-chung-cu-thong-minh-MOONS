@@ -1,0 +1,23 @@
+# Cấu hình riêng từng máy (chứa mật khẩu CSDL / API key) – KHÔNG đưa lên GitHub
+config/config.local.php
+
+# File người dùng tải lên & ảnh mẫu do seed sinh ra
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Bản dump CSDL tạm khi chạy kiểm thử
+seed.sql
+*.sql.gz
+
+# Python (docs/diagrams/generate.py)
+__pycache__/
+*.pyc
+docs/diagrams/*.png
+docs/diagrams/*.svg
+
+# IDE / hệ điều hành
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+.DS_Store

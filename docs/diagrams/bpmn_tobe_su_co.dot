@@ -1,0 +1,32 @@
+digraph G { rankdir=LR; compound=true; newrank=true; fontname="DejaVu Sans"; label="TO-BE: Tiếp nhận và xử lý sự cố"; labelloc=t; fontsize=13; nodesep=0.35; ranksep=0.35;
+node[fontname="DejaVu Sans",fontsize=10]; edge[fontname="DejaVu Sans",fontsize=9,color="#444444",arrowsize=0.7];
+subgraph cluster_0 { label="Cư dân"; labeljust=l; style=filled; fillcolor="#EEF3F0"; color="#99AAAA";
+s[shape=circle,label="",width=0.3,style=filled,fillcolor="#C6F6D5",color="#2F855A"];
+a1[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Gửi phiếu kèm\nảnh hiện trường"];
+a2[shape=diamond,label="Hài lòng?",style=filled,fillcolor="#FEFCBF",color="#B7791F",fontsize=9,width=0.6,height=0.6];
+a3[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Chấm 1–5 sao"];
+e[shape=doublecircle,label="",width=0.25,style=filled,fillcolor="#FED7D7",color="#C53030"];
+}
+subgraph cluster_1 { label="Điều phối viên"; labeljust=l; style=filled; fillcolor="#F7F8F6"; color="#99AAAA";
+d1[shape=diamond,label="Hợp lệ?",style=filled,fillcolor="#FEFCBF",color="#B7791F",fontsize=9,width=0.6,height=0.6];
+d2[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Phân công KTV\n(khẩn cấp ≤ 15 phút)"];
+d3[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Từ chối kèm lý do"];
+}
+subgraph cluster_2 { label="Kỹ thuật viên"; labeljust=l; style=filled; fillcolor="#EEF3F0"; color="#99AAAA";
+k1[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Đang xử lý"];
+k2[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Chờ linh kiện"];
+k3[shape=box,style="rounded,filled",fillcolor="#FFFFFF",color="#5F7B6F",label="Gửi nghiệm thu\n(bắt buộc ảnh)"];
+}
+s->a1[label=""];
+a1->d1[label=""];
+d1->d3[label="Không"];
+d1->d2[label="Có"];
+d2->k1[label=""];
+k1->k2[label="thiếu vật tư",style=dashed];
+k2->k1[label=""];
+k1->k3[label=""];
+k3->a2[label=""];
+a2->a3[label="Có"];
+a2->k1[label="Sửa lại"];
+a3->e[label=""];
+}
