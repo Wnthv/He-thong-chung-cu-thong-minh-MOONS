@@ -38,7 +38,7 @@ $active = ['vehicles' => 'residents', 'vnpay.return' => 'invoices', 'auth.passwo
   <div class="chat-in">
     <div class="chat-h">
       {!! icon('bot') !!}
-      <div class="grow"><b>Trợ lý AI Moons Bot</b><div class="on">Trực tuyến 24/7 • {!! cfg('gemini')['api_key'] ? 'Gemini 2.5 Flash + RAG' : 'Chế độ tra cứu nội quy' !!}</div></div>
+      <div class="grow"><b>Trợ lý AI Moons Bot</b><div class="on">Trực tuyến 24/7 • {!! cfg('gemini')['api_key'] ? cfg('gemini')['model'] . ' + RAG' : 'Chế độ tra cứu nội quy' !!}</div></div>
       <button class="x" data-close-chat aria-label="Đóng">{!! icon('x') !!}</button>
     </div>
     <div class="chat-b" id="chatBody">

@@ -70,6 +70,9 @@ Lược đồ do migration tạo ra trùng khớp với thiết kế CSDL trong 
 ## 4. Tích hợp tùy chọn (file `.env`)
 - **VNPay**: điền `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET`; để trống thì dùng cổng VNPay mô phỏng (cùng thuật toán HMAC SHA512 + IPN). IPN URL: `.../vnpay/ipn`.
 - **Gemini**: điền `GEMINI_API_KEY`; để trống thì Trợ lý AI chạy chế độ tra cứu nội quy.
+  Kiểm tra kết nối: `php artisan moons:ai-check`. Bộ 26 tài liệu ngữ cảnh mẫu nằm ở `database/seeders/ai_docs.php`;
+  nạp/cập nhật vào CSDL đang dùng (không xóa dữ liệu khác): `php artisan moons:ai-docs`.
+  Các mức giá trong tài liệu mẫu là giả định tham khảo theo mặt bằng chung cư TP.HCM năm 2026.
 - **OTP**: `OTP_DEMO=true` hiển thị mã trên màn hình (chưa tích hợp SMS).
 - **Ngày hệ thống**: `MOONS_FIXED_TODAY=2026-11-04` cố định ngày khớp bộ dữ liệu trong báo cáo; để trống để dùng ngày thực.
 

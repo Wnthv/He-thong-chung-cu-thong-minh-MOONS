@@ -26,8 +26,12 @@ return [
     // Google Gemini: để trống GEMINI_API_KEY => Trợ lý AI chạy chế độ tra cứu nội quy (không gọi mô hình)
     'gemini' => [
         'api_key' => (string) env('GEMINI_API_KEY', ''),
-        'model'   => env('GEMINI_MODEL', 'gemini-2.5-flash'),
-        'timeout' => 5,
+        'model'   => env('GEMINI_MODEL', 'gemini-3.8-flash'),
+        // Model dự phòng khi model chính quá tải (cách nhau dấu phẩy, để trống = không dùng)
+        'fallback_models' => env('GEMINI_FALLBACK_MODELS', ''),
+        'url'     => env('GEMINI_URL', 'https://generativelanguage.googleapis.com/v1beta'),
+        // Quá thời gian này thì trả câu trả lời dự phòng kèm Hotline (UC-RES09, ngoại lệ 4a)
+        'timeout' => (int) env('GEMINI_TIMEOUT', 20),
     ],
 
     // OTP: chưa tích hợp nhà mạng SMS => hiển thị mã OTP trên màn hình (chế độ demo)
